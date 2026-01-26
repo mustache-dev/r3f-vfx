@@ -1,4 +1,4 @@
-import { Environment } from "@react-three/drei";
+import { Environment } from '@react-three/drei';
 
 export default function SceneLight() {
   return (
@@ -7,7 +7,7 @@ export default function SceneLight() {
         castShadow
         position={[5, 10, 5]}
         intensity={3}
-        color={"#ffe7bd"}
+        color={'#ffe7bd'}
         shadow-bias={-0.0001}
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-20}

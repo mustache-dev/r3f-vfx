@@ -1,21 +1,15 @@
-import * as THREE from "three/webgpu";
-import {
-  pass,
-  mrt,
-  output,
-  velocity,
-  uniform,
-} from "three/tsl";
-import { bloom } from "three/addons/tsl/display/BloomNode.js";
-import { motionBlur } from "three/addons/tsl/display/MotionBlur.js";
-import { smaa } from "three/addons/tsl/display/SMAANode.js";
-import { useThree, useFrame } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import * as THREE from 'three/webgpu';
+import { pass, mrt, output, velocity, uniform } from 'three/tsl';
+import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { motionBlur } from 'three/addons/tsl/display/MotionBlur.js';
+import { smaa } from 'three/addons/tsl/display/SMAANode.js';
+import { useThree, useFrame } from '@react-three/fiber';
+import { useEffect, useRef } from 'react';
 
 export function WebGPUPostProcessing({
   bloomStrength = 0.15,
   bloomRadius = 0.1,
-  bloomThreshold = 0.,
+  bloomThreshold = 0,
   motionBlurAmount = 0.01,
   enableSmaa = true,
   enableMotionBlur = false,
@@ -39,17 +33,21 @@ export function WebGPUPostProcessing({
       })
     );
 
-    const scenePassColor = scenePass.getTextureNode("output");
-    const scenePassVelocity = scenePass.getTextureNode("velocity");
-
+    const scenePassColor = scenePass.getTextureNode('output');
+    const scenePassVelocity = scenePass.getTextureNode('velocity');
 
     const blurAmount = uniform(motionBlurAmount);
     const velocityScaled = scenePassVelocity.mul(blurAmount);
-    const afterMotionBlur = enableMotionBlur 
-      ? motionBlur(scenePassColor, velocityScaled) 
+    const afterMotionBlur = enableMotionBlur
+      ? motionBlur(scenePassColor, velocityScaled)
       : scenePassColor;
 
-    const bloomPass = bloom(scenePassColor, bloomStrength, bloomRadius, bloomThreshold);
+    const bloomPass = bloom(
+      scenePassColor,
+      bloomStrength,
+      bloomRadius,
+      bloomThreshold
+    );
     const withBloom = afterMotionBlur.add(bloomPass);
 
     const finalOutput = enableSmaa ? smaa(withBloom) : withBloom;
@@ -66,7 +64,18 @@ export function WebGPUPostProcessing({
     return () => {
       postProcessingRef.current = null;
     };
-  }, [renderer, scene, camera, size, bloomStrength, bloomRadius, bloomThreshold, motionBlurAmount, enableSmaa, enableMotionBlur]);
+  }, [
+    renderer,
+    scene,
+    camera,
+    size,
+    bloomStrength,
+    bloomRadius,
+    bloomThreshold,
+    motionBlurAmount,
+    enableSmaa,
+    enableMotionBlur,
+  ]);
 
   useFrame(({ gl, scene, camera }) => {
     if (postProcessingRef.current) {

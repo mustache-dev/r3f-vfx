@@ -1,7 +1,13 @@
-import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
-import { useFrame } from "@react-three/fiber";
-import { Vector3, Quaternion } from "three/webgpu";
-import { useVFXStore } from "./useVFXStore";
+import {
+  useRef,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Vector3, Quaternion } from 'three/webgpu';
+import { useVFXStore } from './useVFXStore';
 
 // Reusable temp objects for transforms (avoid allocations in render loop)
 const _worldPos = new Vector3();
@@ -10,35 +16,35 @@ const _tempVec = new Vector3();
 
 /**
  * VFXEmitter - A reusable emitter component that links to a VFXParticles system
- * 
+ *
  * Multiple VFXEmitters can share a single VFXParticles instance without adding
  * supplementary draw calls. Each emitter just calls spawn() on the shared system.
- * 
+ *
  * The emitter renders a <group> that inherits parent transforms automatically,
  * so you can place it as a child of any object and it will follow.
- * 
+ *
  * Usage:
- * 
+ *
  * // First, set up a VFXParticles with a name
  * <VFXParticles name="sparks" maxParticles={1000} autoStart={false} ... />
- * 
+ *
  * // Place emitter as child - it automatically follows parent transforms!
  * <group ref={playerRef}>
- *   <VFXEmitter 
+ *   <VFXEmitter
  *     name="sparks"
  *     position={[0, 1, 0]}  // Local offset from parent
  *     emitCount={5}
  *     delay={0.1}
  *   />
  * </group>
- * 
+ *
  * // Use localDirection to emit relative to parent's rotation
- * <VFXEmitter 
+ * <VFXEmitter
  *   name="sparks"
  *   direction={[[0, 0], [0, 0], [-1, -1]]}  // Emit backward in local space
  *   localDirection={true}  // Direction is transformed by parent's rotation
  * />
- * 
+ *
  * @param {object} props
  * @param {string} props.name - Name of the registered VFXParticles system
  * @param {object} [props.particlesRef] - Direct ref to VFXParticles (alternative to name)
@@ -52,20 +58,23 @@ const _tempVec = new Vector3();
  * @param {object} [props.overrides] - Per-spawn overrides (size, speed, colors, etc.)
  * @param {function} [props.onEmit] - Callback fired after each emission
  */
-export const VFXEmitter = forwardRef(function VFXEmitter({
-  name,
-  particlesRef,
-  position = [0, 0, 0],
-  emitCount = 10,
-  delay = 0,
-  autoStart = true,
-  loop = true,
-  localDirection = false,
-  direction,
-  overrides = null,
-  onEmit,
-  children,
-}, ref) {
+export const VFXEmitter = forwardRef(function VFXEmitter(
+  {
+    name,
+    particlesRef,
+    position = [0, 0, 0],
+    emitCount = 10,
+    delay = 0,
+    autoStart = true,
+    loop = true,
+    localDirection = false,
+    direction,
+    overrides = null,
+    onEmit,
+    children,
+  },
+  ref
+) {
   const groupRef = useRef();
   const emitAccumulator = useRef(0);
   const emitting = useRef(autoStart);
@@ -82,15 +91,15 @@ export const VFXEmitter = forwardRef(function VFXEmitter({
   // Transform a direction range by quaternion
   const transformDirectionByQuat = useCallback((dirRange, quat) => {
     if (!dirRange) return null;
-    
+
     // Transform min and max direction vectors
     // dirRange format: [[minX, maxX], [minY, maxY], [minZ, maxZ]]
     const minDir = _tempVec.set(dirRange[0][0], dirRange[1][0], dirRange[2][0]);
     minDir.applyQuaternion(quat);
-    
+
     const maxDir = new Vector3(dirRange[0][1], dirRange[1][1], dirRange[2][1]);
     maxDir.applyQuaternion(quat);
-    
+
     // Return transformed ranges (maintain min/max relationship per axis)
     return [
       [Math.min(minDir.x, maxDir.x), Math.max(minDir.x, maxDir.x)],
@@ -132,18 +141,18 @@ export const VFXEmitter = forwardRef(function VFXEmitter({
 
     const { position: emitPos, direction: emitDir } = getEmitParams();
     const [x, y, z] = emitPos;
-    
+
     // Merge direction override with other overrides
-    const finalOverrides = emitDir 
+    const finalOverrides = emitDir
       ? { ...overrides, direction: emitDir }
       : overrides;
-    
+
     particles.spawn(x, y, z, emitCount, finalOverrides);
-    
+
     if (onEmit) {
       onEmit({ position: emitPos, count: emitCount, direction: emitDir });
     }
-    
+
     return true;
   }, [getParticleSystem, getEmitParams, name, emitCount, overrides, onEmit]);
 
@@ -184,25 +193,32 @@ export const VFXEmitter = forwardRef(function VFXEmitter({
   }, []);
 
   // Burst: emit once immediately, regardless of autoStart
-  const burst = useCallback((count) => {
-    const particles = getParticleSystem();
-    if (!particles?.spawn) return false;
-    
-    const { position: emitPos, direction: emitDir } = getEmitParams();
-    const [x, y, z] = emitPos;
-    
-    const finalOverrides = emitDir 
-      ? { ...overrides, direction: emitDir }
-      : overrides;
-    
-    particles.spawn(x, y, z, count ?? emitCount, finalOverrides);
-    
-    if (onEmit) {
-      onEmit({ position: emitPos, count: count ?? emitCount, direction: emitDir });
-    }
-    
-    return true;
-  }, [getParticleSystem, getEmitParams, emitCount, overrides, onEmit]);
+  const burst = useCallback(
+    (count) => {
+      const particles = getParticleSystem();
+      if (!particles?.spawn) return false;
+
+      const { position: emitPos, direction: emitDir } = getEmitParams();
+      const [x, y, z] = emitPos;
+
+      const finalOverrides = emitDir
+        ? { ...overrides, direction: emitDir }
+        : overrides;
+
+      particles.spawn(x, y, z, count ?? emitCount, finalOverrides);
+
+      if (onEmit) {
+        onEmit({
+          position: emitPos,
+          count: count ?? emitCount,
+          direction: emitDir,
+        });
+      }
+
+      return true;
+    },
+    [getParticleSystem, getEmitParams, emitCount, overrides, onEmit]
+  );
 
   // Update emitting state when autoStart changes
   useEffect(() => {
@@ -214,22 +230,30 @@ export const VFXEmitter = forwardRef(function VFXEmitter({
   }, [autoStart]);
 
   // Expose control methods via ref
-  useImperativeHandle(ref, () => ({
-    /** Emit particles at current position */
-    emit,
-    /** Burst emit - emit immediately regardless of autoStart */
-    burst,
-    /** Start auto-emission */
-    start,
-    /** Stop auto-emission */
-    stop,
-    /** Check if currently emitting */
-    get isEmitting() { return emitting.current; },
-    /** Get the linked particle system */
-    getParticleSystem,
-    /** Get the group ref for direct access */
-    get group() { return groupRef.current; },
-  }), [emit, burst, start, stop, getParticleSystem]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      /** Emit particles at current position */
+      emit,
+      /** Burst emit - emit immediately regardless of autoStart */
+      burst,
+      /** Start auto-emission */
+      start,
+      /** Stop auto-emission */
+      stop,
+      /** Check if currently emitting */
+      get isEmitting() {
+        return emitting.current;
+      },
+      /** Get the linked particle system */
+      getParticleSystem,
+      /** Get the group ref for direct access */
+      get group() {
+        return groupRef.current;
+      },
+    }),
+    [emit, burst, start, stop, getParticleSystem]
+  );
 
   // Render a group that inherits parent transforms
   return (
@@ -241,13 +265,13 @@ export const VFXEmitter = forwardRef(function VFXEmitter({
 
 /**
  * Higher-order hook for programmatic emitter control
- * 
+ *
  * Usage:
  * const { emit, burst, start, stop } = useVFXEmitter("sparks");
- * 
+ *
  * // Emit at a position
  * emit([1, 2, 3], 50);
- * 
+ *
  * // Burst with overrides
  * burst([0, 0, 0], 100, { colorStart: ["#ff0000"] });
  */

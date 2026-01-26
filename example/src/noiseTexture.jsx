@@ -1,4 +1,4 @@
-import { TextureLoader, RepeatWrapping, LinearFilter } from "three/webgpu";
+import { TextureLoader, RepeatWrapping, LinearFilter } from 'three/webgpu';
 
 export const noiseTexture = new TextureLoader().load('./noise.png');
 noiseTexture.wrapS = noiseTexture.wrapT = RepeatWrapping;

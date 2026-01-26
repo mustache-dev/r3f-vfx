@@ -1,23 +1,23 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 /**
  * VFX Store - Centralized management for VFX particle systems
- * 
+ *
  * Allows multiple VFXEmitter components to share a single VFXParticles instance,
  * avoiding extra draw calls while enabling emission from multiple positions.
- * 
+ *
  * Usage:
- * 
+ *
  * // Register a particle system
  * <VFXParticles ref={(ref) => registerParticles("sparks", ref)} ... />
- * 
+ *
  * // Or use the VFXParticles name prop with auto-registration
  * <VFXParticles name="sparks" ... />
- * 
+ *
  * // Emit from anywhere using VFXEmitter (no extra draw calls!)
  * <VFXEmitter name="sparks" position={[1, 0, 0]} emitCount={10} />
  * <VFXEmitter name="sparks" position={[-1, 0, 0]} emitCount={5} />
- * 
+ *
  * // Or emit programmatically
  * const emit = useVFXStore(s => s.emit);
  * emit("sparks", { x: 0, y: 1, z: 0, count: 20 });
@@ -63,7 +63,7 @@ export const useVFXStore = create((set, get) => ({
    * @param {string} name - Name of the particle system
    * @param {object} options - Emission options
    * @param {number} [options.x=0] - X position offset
-   * @param {number} [options.y=0] - Y position offset  
+   * @param {number} [options.y=0] - Y position offset
    * @param {number} [options.z=0] - Z position offset
    * @param {number} [options.count=20] - Number of particles to emit
    * @param {object} [options.overrides] - Spawn parameter overrides
@@ -72,7 +72,9 @@ export const useVFXStore = create((set, get) => ({
   emit: (name, { x = 0, y = 0, z = 0, count = 20, overrides = null } = {}) => {
     const particles = get().particles[name];
     if (!particles?.spawn) {
-      console.warn(`VFXStore: No particle system registered with name "${name}"`);
+      console.warn(
+        `VFXStore: No particle system registered with name "${name}"`
+      );
       return false;
     }
     particles.spawn(x, y, z, count, overrides);
@@ -87,7 +89,9 @@ export const useVFXStore = create((set, get) => ({
   start: (name) => {
     const particles = get().particles[name];
     if (!particles?.start) {
-      console.warn(`VFXStore: No particle system registered with name "${name}"`);
+      console.warn(
+        `VFXStore: No particle system registered with name "${name}"`
+      );
       return false;
     }
     particles.start();
@@ -102,7 +106,9 @@ export const useVFXStore = create((set, get) => ({
   stop: (name) => {
     const particles = get().particles[name];
     if (!particles?.stop) {
-      console.warn(`VFXStore: No particle system registered with name "${name}"`);
+      console.warn(
+        `VFXStore: No particle system registered with name "${name}"`
+      );
       return false;
     }
     particles.stop();
@@ -117,7 +123,9 @@ export const useVFXStore = create((set, get) => ({
   clear: (name) => {
     const particles = get().particles[name];
     if (!particles?.clear) {
-      console.warn(`VFXStore: No particle system registered with name "${name}"`);
+      console.warn(
+        `VFXStore: No particle system registered with name "${name}"`
+      );
       return false;
     }
     particles.clear();

@@ -1,12 +1,12 @@
-import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import {
   VFXParticles,
   Appearance,
   Blending,
   EmitterShape,
   Lighting,
-} from "./VFXParticles";
+} from 'r3f-vfx';
 import {
   TextureLoader,
   BoxGeometry,
@@ -19,9 +19,9 @@ import {
   CapsuleGeometry,
   MeshBasicNodeMaterial,
   NearestFilter,
-} from "three/webgpu";
-import { useGLTF } from "@react-three/drei";
-import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
+} from 'three/webgpu';
+import { useGLTF } from '@react-three/drei';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {
   viewportSharedTexture,
   screenUV,
@@ -60,16 +60,16 @@ import {
   fract,
   normalViewGeometry,
   color,
-} from "three/tsl";
+} from 'three/tsl';
 
 export const Particles = () => {
   const swordParticlesRef = useRef();
-  const smokeTexture = new TextureLoader().load("./2.png");
-  const noiseTexture = new TextureLoader().load("./noise.png");
-  const tileTexture = new TextureLoader().load("./tile-2.png");
+  const smokeTexture = new TextureLoader().load('./2.png');
+  const noiseTexture = new TextureLoader().load('./noise.png');
+  const tileTexture = new TextureLoader().load('./tile-2.png');
   tileTexture.minFilter = tileTexture.magFilter = NearestFilter;
   const { nodes: cherryBlossomPetalNodes } = useGLTF(
-    "/cherry_blossom_petal-transformed.glb",
+    '/cherry_blossom_petal-transformed.glb'
   );
   const cherryBlossomPetalGeometry = useMemo(() => {
     const geo1 = cherryBlossomPetalNodes.Object_4.geometry;
@@ -79,7 +79,7 @@ export const Particles = () => {
   noiseTexture.minFilter = noiseTexture.magFilter = LinearFilter;
 
   // Load sword model and merge geometries
-  const { nodes } = useGLTF("/sword1-transformed.glb");
+  const { nodes } = useGLTF('/sword1-transformed.glb');
 
   const swordGeometry = useMemo(() => {
     const geo1 = nodes.Cube001.geometry;
@@ -117,7 +117,7 @@ export const Particles = () => {
     mat.transparent = true;
 
     // const fresnelPower = float(3.0);
-    const orangeGlow = color("#ffa600").mul(20);
+    const orangeGlow = color('#ffa600').mul(20);
 
     const fade = pow(normalGeometry.z.oneMinus(), 0.5);
 
@@ -159,7 +159,7 @@ export const Particles = () => {
 
     const fresnelDot = max(
       dot(normalize(positionViewDirection), normalize(normalView)),
-      float(0),
+      float(0)
     );
     const fresnel = pow(float(1).sub(fresnelDot), fresnelPower);
 
@@ -807,7 +807,7 @@ debug
         delay={0.5}
         size={[0.05, 0.07]}
         fadeSize={[1, 0]}
-        colorStart={["#65ffe8"]}
+        colorStart={['#65ffe8']}
         fadeOpacity={[1, 0]}
         gravity={[0, 0, 0]}
         speed={[4.01, 4.01]}
@@ -1098,4 +1098,4 @@ debug
   );
 };
 
-useGLTF.preload("/sword1-transformed.glb");
+useGLTF.preload('/sword1-transformed.glb');

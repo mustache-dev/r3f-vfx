@@ -8,16 +8,19 @@ Source: https://sketchfab.com/3d-models/cherry-blossom-petal-a1e45d9f9796403ca85
 Title: Cherry blossom petal
 */
 
-import React from 'react'
-import { useGLTF } from '@react-three/drei'
+import React from 'react';
+import { useGLTF } from '@react-three/drei';
 
 export function Model(props) {
-  const { nodes, materials } = useGLTF('/cherry_blossom_petal-transformed.glb')
+  const { nodes, materials } = useGLTF('/cherry_blossom_petal-transformed.glb');
   return (
     <group {...props} dispose={null}>
-      <mesh geometry={nodes.Object_4.geometry} material={materials.SakuraHanaBira} />
+      <mesh
+        geometry={nodes.Object_4.geometry}
+        material={materials.SakuraHanaBira}
+      />
     </group>
-  )
+  );
 }
 
-useGLTF.preload('/cherry_blossom_petal-transformed.glb')
+useGLTF.preload('/cherry_blossom_petal-transformed.glb');

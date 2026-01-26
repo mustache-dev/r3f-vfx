@@ -6,10 +6,15 @@
     "r3f-vfx"
   ],
   "scripts": {
-    "dev": "bun run -F '*' dev",
+    "dev": "run-p dev:*",
+    "dev:library": "bun run -F r3f-vfx dev",
+    "dev:example": "bun run -F example dev",
+    "start": "bun run -F example start",
+    "build": "bun run -F '*' build",
     "format": "prettier . --write"
   },
   "devDependencies": {
+    "npm-run-all": "4.1.5",
     "prettier": "3.8.1"
   }
 }
