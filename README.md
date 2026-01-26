@@ -1,4 +1,4 @@
-# r3f-vf
+# r3f-vfx
 
 High-performance GPU-accelerated particle system for Three.js WebGPU with React Three Fiber.
 
