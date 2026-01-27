@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three/webgpu';
-import { useVFXStore } from './useVFXStore';
+import { useVFXStore } from './react-store';
 import {
   Fn,
   If,

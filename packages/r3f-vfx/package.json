@@ -28,6 +28,10 @@
     "zustand": "5.0.10"
   },
   "devDependencies": {
+    "@react-three/fiber": "9.5.0",
+    "@types/react": "19.2.10",
+    "@types/three": "0.182.0",
+    "three": "0.182.0",
     "tsup": "8.5.1",
     "typescript": "5.9.3"
   },

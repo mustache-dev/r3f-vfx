@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Quaternion } from 'three/webgpu';
-import { useVFXStore } from './useVFXStore';
+import { useVFXStore } from './react-store';
 
 // Reusable temp objects for transforms (avoid allocations in render loop)
 const _worldPos = new Vector3();

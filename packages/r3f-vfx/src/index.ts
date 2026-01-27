@@ -12,4 +12,4 @@ export {
 
 export { VFXEmitter, useVFXEmitter } from './VFXEmitter';
 
-export { useVFXStore } from './useVFXStore';
+export { useVFXStore } from './react-store';

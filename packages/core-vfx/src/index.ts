@@ -1,1 +1,1 @@
-console.log('core-vfx');
+export { type CoreState, coreStore } from './core-store';

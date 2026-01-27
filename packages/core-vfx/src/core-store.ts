@@ -1,4 +1,40 @@
-import { create } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+
+export type ParticleSystemRef = {
+  spawn: (
+    x: number,
+    y: number,
+    z: number,
+    count: number,
+    overrides?: Record<string, unknown> | null
+  ) => void;
+  start: () => void;
+  stop: () => void;
+  clear: () => void;
+  isEmitting: boolean;
+  uniforms: Record<string, unknown>;
+};
+
+export type EmitOptions = {
+  x?: number;
+  y?: number;
+  z?: number;
+  count?: number;
+  overrides?: Record<string, unknown> | null;
+};
+
+export type CoreState = {
+  particles: Record<string, ParticleSystemRef>;
+  registerParticles: (name: string, ref: ParticleSystemRef) => void;
+  unregisterParticles: (name: string) => void;
+  getParticles: (name: string) => ParticleSystemRef | null;
+  emit: (name: string, options?: EmitOptions) => boolean;
+  start: (name: string) => boolean;
+  stop: (name: string) => boolean;
+  clear: (name: string) => boolean;
+  isEmitting: (name: string) => boolean;
+  getUniforms: (name: string) => Record<string, unknown> | null;
+};
 
 /**
  * VFX Store - Centralized management for VFX particle systems
@@ -22,14 +58,15 @@ import { create } from 'zustand';
  * const emit = useVFXStore(s => s.emit);
  * emit("sparks", { x: 0, y: 1, z: 0, count: 20 });
  */
-export const useVFXStore = create((set, get) => ({
+
+export const coreStore = createStore<CoreState>()((set, get) => ({
   // Registered particle systems: { name: ref }
   particles: {},
 
   /**
    * Register a VFXParticles instance by name
-   * @param {string} name - Unique identifier for this particle system
-   * @param {object} ref - The ref object from VFXParticles (with spawn, start, stop methods)
+   * @param name - Unique identifier for this particle system
+   * @param ref - The ref object from VFXParticles (with spawn, start, stop methods)
    */
   registerParticles: (name, ref) => {
     if (!name || !ref) return;
@@ -40,7 +77,7 @@ export const useVFXStore = create((set, get) => ({
 
   /**
    * Unregister a VFXParticles instance
-   * @param {string} name - Name of the particle system to unregister
+   * @param name - Name of the particle system to unregister
    */
   unregisterParticles: (name) => {
     set((state) => {
@@ -51,8 +88,8 @@ export const useVFXStore = create((set, get) => ({
 
   /**
    * Get a registered particle system by name
-   * @param {string} name - Name of the particle system
-   * @returns {object|null} The particle system ref or null
+   * @param name - Name of the particle system
+   * @returns The particle system ref or null
    */
   getParticles: (name) => {
     return get().particles[name] || null;
@@ -60,14 +97,14 @@ export const useVFXStore = create((set, get) => ({
 
   /**
    * Emit particles from a registered system
-   * @param {string} name - Name of the particle system
-   * @param {object} options - Emission options
-   * @param {number} [options.x=0] - X position offset
-   * @param {number} [options.y=0] - Y position offset
-   * @param {number} [options.z=0] - Z position offset
-   * @param {number} [options.count=20] - Number of particles to emit
-   * @param {object} [options.overrides] - Spawn parameter overrides
-   * @returns {boolean} True if emission was successful
+   * @param name - Name of the particle system
+   * @param options - Emission options
+   * @param options.x - X position offset
+   * @param options.y - Y position offset
+   * @param options.z - Z position offset
+   * @param options.count - Number of particles to emit
+   * @param options.overrides - Spawn parameter overrides
+   * @returns True if emission was successful
    */
   emit: (name, { x = 0, y = 0, z = 0, count = 20, overrides = null } = {}) => {
     const particles = get().particles[name];
@@ -83,8 +120,8 @@ export const useVFXStore = create((set, get) => ({
 
   /**
    * Start auto-emission on a registered particle system
-   * @param {string} name - Name of the particle system
-   * @returns {boolean} True if successful
+   * @param name - Name of the particle system
+   * @returns True if successful
    */
   start: (name) => {
     const particles = get().particles[name];
@@ -100,8 +137,8 @@ export const useVFXStore = create((set, get) => ({
 
   /**
    * Stop auto-emission on a registered particle system
-   * @param {string} name - Name of the particle system
-   * @returns {boolean} True if successful
+   * @param name - Name of the particle system
+   * @returns True if successful
    */
   stop: (name) => {
     const particles = get().particles[name];
@@ -117,8 +154,8 @@ export const useVFXStore = create((set, get) => ({
 
   /**
    * Clear all particles from a registered system
-   * @param {string} name - Name of the particle system
-   * @returns {boolean} True if successful
+   * @param name - Name of the particle system
+   * @returns True if successful
    */
   clear: (name) => {
     const particles = get().particles[name];
@@ -134,8 +171,8 @@ export const useVFXStore = create((set, get) => ({
 
   /**
    * Check if a particle system is currently emitting
-   * @param {string} name - Name of the particle system
-   * @returns {boolean} True if emitting
+   * @param name - Name of the particle system
+   * @returns True if emitting
    */
   isEmitting: (name) => {
     const particles = get().particles[name];
@@ -144,13 +181,11 @@ export const useVFXStore = create((set, get) => ({
 
   /**
    * Get the uniforms object for direct manipulation
-   * @param {string} name - Name of the particle system
-   * @returns {object|null} The uniforms object or null
+   * @param name - Name of the particle system
+   * @returns The uniforms object or null
    */
   getUniforms: (name) => {
     const particles = get().particles[name];
     return particles?.uniforms || null;
   },
 }));
-
-export default useVFXStore;

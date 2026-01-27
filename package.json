@@ -6,10 +6,12 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "run-p dev:*",
-    "dev:library": "bun run -F r3f-vfx dev",
-    "dev:example": "bun run -F example dev",
-    "start": "bun run -F example start",
+    "dev": "run-p dev:core dev:r3f:*",
+    "dev:core": "bun run -F core-vfx dev",
+    "dev:r3f:library": "bun run -F r3f-vfx dev",
+    "dev:r3f:example": "bun run -F r3f-example dev",
+    "typecheck": "bun run -F '*' typecheck",
+    "start": "bun run -F r3f-example start",
     "build": "bun run -F '*' build",
     "format": "prettier . --write"
   },
