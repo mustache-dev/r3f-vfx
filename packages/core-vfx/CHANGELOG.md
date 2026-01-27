@@ -1,5 +1,11 @@
 # core-vfx
 
+## 0.0.2
+
+### Patch Changes
+
+- f719588: Split useVFXStore into core-store and react-store
+
 ## 0.0.1
 
 ### Patch Changes
