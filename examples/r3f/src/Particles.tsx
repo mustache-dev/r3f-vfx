@@ -19,6 +19,9 @@ import {
   CapsuleGeometry,
   MeshBasicNodeMaterial,
   NearestFilter,
+  Node,
+  Texture,
+  Mesh,
 } from 'three/webgpu';
 import { useGLTF } from '@react-three/drei';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -63,7 +66,7 @@ import {
 } from 'three/tsl';
 
 export const Particles = () => {
-  const swordParticlesRef = useRef();
+  // const swordParticlesRef = useRef();
   const smokeTexture = new TextureLoader().load('./2.png');
   const noiseTexture = new TextureLoader().load('./noise.png');
   const tileTexture = new TextureLoader().load('./tile-2.png');
@@ -72,6 +75,7 @@ export const Particles = () => {
     '/cherry_blossom_petal-transformed.glb'
   );
   const cherryBlossomPetalGeometry = useMemo(() => {
+    // @ts-expect-error
     const geo1 = cherryBlossomPetalNodes.Object_4.geometry;
     return geo1;
   }, [cherryBlossomPetalNodes]);
@@ -82,11 +86,12 @@ export const Particles = () => {
   const { nodes } = useGLTF('/sword1-transformed.glb');
 
   const swordGeometry = useMemo(() => {
+    // @ts-expect-error
     const geo1 = nodes.Cube001.geometry;
     return geo1;
   }, [nodes]);
 
-  const impactRef = useRef();
+  const impactRef = useRef<Mesh>(null);
   // Sphere geometry for bouncing balls
   const sphereGeometry = useMemo(() => {
     return new SphereGeometry(0.5, 16, 16);
@@ -109,7 +114,9 @@ export const Particles = () => {
   // }, [])
 
   useFrame(({ camera }) => {
-    impactRef.current.lookAt(camera.position);
+    if (impactRef.current) {
+      impactRef.current.lookAt(camera.position);
+    }
   });
 
   const polarMat = useMemo(() => {
@@ -148,7 +155,7 @@ export const Particles = () => {
     return mat;
   }, []);
 
-  const distortionBackdrop = ({ progress }) => {
+  const distortionBackdrop = ({ progress }: { progress: Node }) => {
     const vUv = screenUV;
 
     const fresnelPower = float(2.0);
@@ -180,7 +187,17 @@ export const Particles = () => {
 
     return vec3(r, g, b);
   };
-  const triplanar = ({ position, normal, scale = 1.0, map }) => {
+  const triplanar = ({
+    position,
+    normal,
+    scale = 1.0,
+    map,
+  }: {
+    position: Node;
+    normal: Node;
+    scale: number;
+    map: Texture;
+  }) => {
     const pos = position.mul(scale);
     const n = abs(normal);
 
@@ -197,7 +214,7 @@ export const Particles = () => {
     return texX.mul(blend.x).add(texY.mul(blend.y)).add(texZ.mul(blend.z));
   };
 
-  const stylizedSphereBackdrop = ({ progress }) => {
+  const stylizedSphereBackdrop = ({ progress }: { progress: Node }) => {
     // Fresnel: 0 at center, 1 at edges (inverted from before)
 
     // const normalTarget = vec3(0, 1, 0);

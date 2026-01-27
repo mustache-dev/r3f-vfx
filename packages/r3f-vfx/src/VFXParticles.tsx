@@ -92,7 +92,7 @@ export const Lighting = Object.freeze({
 const MAX_ATTRACTORS = 4;
 
 // Convert hex to RGB array [0-1]
-const hexToRgb = (hex) => {
+const hexToRgb = (hex: string): [number, number, number] => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? [
@@ -104,7 +104,10 @@ const hexToRgb = (hex) => {
 };
 
 // Normalize a prop to [min, max] array - if single value, use same for both
-const toRange = (value, defaultVal = [0, 0]) => {
+const toRange = (
+  value: number | [number, number] | null | undefined,
+  defaultVal: [number, number] = [0, 0]
+): [number, number] => {
   if (value === undefined || value === null) return defaultVal;
   if (Array.isArray(value))
     return value.length === 2 ? value : [value[0], value[0]];
@@ -112,7 +115,7 @@ const toRange = (value, defaultVal = [0, 0]) => {
 };
 
 // Convert easing string to type number
-const easingToType = (easing) => {
+const easingToType = (easing: string | number): number => {
   if (typeof easing === 'number') return easing;
   switch (easing) {
     case 'easeIn':
@@ -127,7 +130,7 @@ const easingToType = (easing) => {
 };
 
 // Convert axis string to number: 0=+X, 1=+Y, 2=+Z, 3=-X, 4=-Y, 5=-Z
-const axisToNumber = (axis) => {
+const axisToNumber = (axis: string): number => {
   switch (axis) {
     case 'x':
     case '+x':
@@ -161,13 +164,30 @@ const axisToNumber = (axis) => {
 // Curve baking utilities - bake spline curves to 1D textures for GPU sampling
 const CURVE_RESOLUTION = 256; // Number of samples in the baked curve
 
+// Types for curve data
+type CurvePoint = {
+  pos: [number, number];
+  handleIn?: [number, number];
+  handleOut?: [number, number];
+};
+
+type CurveData = {
+  points: CurvePoint[];
+} | null;
+
 // Evaluate cubic bezier between two points with handles
-const evaluateBezierSegment = (t, p0, p1, h0Out, h1In) => {
+const evaluateBezierSegment = (
+  t: number,
+  p0: [number, number],
+  p1: [number, number],
+  h0Out?: [number, number],
+  h1In?: [number, number]
+): [number, number] => {
   // p0 = start point [x, y], p1 = end point [x, y]
   // h0Out = handle out from p0 (offset), h1In = handle in to p1 (offset)
   const cp0 = p0;
-  const cp1 = [p0[0] + (h0Out?.[0] || 0), p0[1] + (h0Out?.[1] || 0)];
-  const cp2 = [p1[0] + (h1In?.[0] || 0), p1[1] + (h1In?.[1] || 0)];
+  const cp1: [number, number] = [p0[0] + (h0Out?.[0] || 0), p0[1] + (h0Out?.[1] || 0)];
+  const cp2: [number, number] = [p1[0] + (h1In?.[0] || 0), p1[1] + (h1In?.[1] || 0)];
   const cp3 = p1;
 
   const mt = 1 - t;
@@ -183,7 +203,7 @@ const evaluateBezierSegment = (t, p0, p1, h0Out, h1In) => {
 };
 
 // Find Y value for a given X on the curve using binary search
-const sampleCurveAtX = (x, points) => {
+const sampleCurveAtX = (x: number, points: CurvePoint[]): number => {
   if (!points || points.length < 2) return x; // Linear fallback
 
   // Validate points have required data
@@ -243,7 +263,7 @@ const sampleCurveAtX = (x, points) => {
 };
 
 // Bake a curve to a Float32Array for use in DataTexture
-export const bakeCurveToArray = (curveData, resolution = CURVE_RESOLUTION) => {
+export const bakeCurveToArray = (curveData: CurveData, resolution = CURVE_RESOLUTION): Float32Array => {
   const data = new Float32Array(resolution);
 
   // Validate curve data structure
@@ -286,11 +306,11 @@ export const bakeCurveToArray = (curveData, resolution = CURVE_RESOLUTION) => {
 // Create a combined DataTexture from multiple curve data
 // R = size curve, G = opacity curve, B = velocity curve, A = rotation speed curve
 export const createCombinedCurveTexture = (
-  sizeCurve,
-  opacityCurve,
-  velocityCurve,
-  rotationSpeedCurve
-) => {
+  sizeCurve: CurveData,
+  opacityCurve: CurveData,
+  velocityCurve: CurveData,
+  rotationSpeedCurve: CurveData
+): THREE.DataTexture => {
   const sizeData = bakeCurveToArray(sizeCurve);
   const opacityData = bakeCurveToArray(opacityCurve);
   const velocityData = bakeCurveToArray(velocityCurve);
@@ -331,7 +351,16 @@ const DEFAULT_LINEAR_CURVE = {
 // - Single number: rotation={0.5} → same rotation for all
 // - [min, max]: rotation={[0, Math.PI]} → random in range (Y-axis for sprites, all axes for geometry)
 // - [[minX, maxX], [minY, maxY], [minZ, maxZ]]: full 3D control
-const toRotation3D = (value) => {
+type Rotation3DInput =
+  | number
+  | [number, number]
+  | [[number, number], [number, number], [number, number]]
+  | null
+  | undefined;
+
+const toRotation3D = (
+  value: Rotation3DInput
+): [[number, number], [number, number], [number, number]] => {
   if (value === undefined || value === null)
     return [
       [0, 0],
@@ -347,14 +376,15 @@ const toRotation3D = (value) => {
   if (Array.isArray(value)) {
     // Check if nested array [[x], [y], [z]]
     if (Array.isArray(value[0])) {
+      const nested = value as [[number, number], [number, number], [number, number]];
       return [
-        toRange(value[0], [0, 0]),
-        toRange(value[1], [0, 0]),
-        toRange(value[2], [0, 0]),
+        toRange(nested[0], [0, 0]),
+        toRange(nested[1], [0, 0]),
+        toRange(nested[2], [0, 0]),
       ];
     }
     // Simple [min, max] - apply to all axes
-    const range = toRange(value, [0, 0]);
+    const range = toRange(value as [number, number], [0, 0]);
     return [range, range, range];
   }
   return [
@@ -364,7 +394,137 @@ const toRotation3D = (value) => {
   ];
 };
 
-export const VFXParticles = forwardRef(function VFXParticles(
+// Particle data passed to custom node functions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ParticleData = Record<string, any>;
+
+export type VFXParticlesProps = {
+  /** Optional name for registering with useVFXStore (enables VFXEmitter linking) */
+  name?: string;
+  /** Maximum number of particles */
+  maxParticles?: number;
+  /** Particle size [min, max] or single value */
+  size?: number | [number, number];
+  /** Array of hex color strings for start color */
+  colorStart?: string[];
+  /** Array of hex color strings for end color (null = use colorStart) */
+  colorEnd?: string[] | null;
+  /** Fade size [start, end] multiplier over lifetime */
+  fadeSize?: number | [number, number];
+  /** Curve data for size over lifetime */
+  fadeSizeCurve?: CurveData;
+  /** Fade opacity [start, end] multiplier over lifetime */
+  fadeOpacity?: number | [number, number];
+  /** Curve data for opacity over lifetime */
+  fadeOpacityCurve?: CurveData;
+  /** Curve data for velocity over lifetime */
+  velocityCurve?: CurveData;
+  /** Gravity vector [x, y, z] */
+  gravity?: [number, number, number];
+  /** Particle lifetime in seconds [min, max] or single value */
+  lifetime?: number | [number, number];
+  /** Direction ranges for velocity */
+  direction?: Rotation3DInput;
+  /** Start position offset ranges */
+  startPosition?: Rotation3DInput;
+  /** Speed [min, max] or single value */
+  speed?: number | [number, number];
+  /** Friction settings */
+  friction?: { intensity?: number | [number, number]; easing?: string };
+  /** Particle appearance type */
+  appearance?: (typeof Appearance)[keyof typeof Appearance];
+  /** Alpha map texture */
+  alphaMap?: THREE.Texture | null;
+  /** Flipbook animation settings */
+  flipbook?: { rows: number; columns: number } | null;
+  /** Rotation [min, max] in radians or 3D rotation ranges */
+  rotation?: Rotation3DInput;
+  /** Rotation speed [min, max] in radians/second or 3D ranges */
+  rotationSpeed?: Rotation3DInput;
+  /** Curve data for rotation speed over lifetime */
+  rotationSpeedCurve?: CurveData;
+  /** Custom geometry for 3D particles */
+  geometry?: THREE.BufferGeometry | null;
+  /** Rotate geometry to face velocity direction */
+  orientToDirection?: boolean;
+  /** Which local axis aligns with velocity */
+  orientAxis?: string;
+  /** Stretch particles based on speed */
+  stretchBySpeed?: { factor: number; maxStretch: number } | null;
+  /** Material lighting type for geometry mode */
+  lighting?: (typeof Lighting)[keyof typeof Lighting];
+  /** Enable shadows on geometry instances */
+  shadow?: boolean;
+  /** Blending mode */
+  blending?: THREE.Blending;
+  /** Color intensity multiplier */
+  intensity?: number;
+  /** Emitter position [x, y, z] */
+  position?: [number, number, number];
+  /** Start emitting automatically */
+  autoStart?: boolean;
+  /** Delay between emissions in seconds */
+  delay?: number;
+  /** TSL node or function for backdrop sampling */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  backdropNode?: any | ((data: ParticleData) => any) | null;
+  /** TSL node or function for custom opacity */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opacityNode?: any | ((data: ParticleData) => any) | null;
+  /** TSL node or function to override color */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  colorNode?: any | ((data: ParticleData, defaultColor: any) => any) | null;
+  /** TSL node or function for alpha test/discard */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  alphaTestNode?: any | ((data: ParticleData) => any) | null;
+  /** TSL node or function for shadow map output */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  castShadowNode?: any | ((data: ParticleData) => any) | null;
+  /** Number of particles to emit per frame */
+  emitCount?: number;
+  /** Emitter shape type */
+  emitterShape?: (typeof EmitterShape)[keyof typeof EmitterShape];
+  /** Emitter radius [inner, outer] */
+  emitterRadius?: number | [number, number];
+  /** Cone angle in radians */
+  emitterAngle?: number;
+  /** Cone height [min, max] */
+  emitterHeight?: number | [number, number];
+  /** Emit from surface only */
+  emitterSurfaceOnly?: boolean;
+  /** Direction for cone/disk normal */
+  emitterDirection?: [number, number, number];
+  /** Turbulence settings */
+  turbulence?: { intensity: number; frequency?: number; speed?: number } | null;
+  /** Array of attractors (max 4) */
+  attractors?: Array<{
+    position?: [number, number, number];
+    strength?: number;
+    radius?: number;
+    type?: 'point' | 'vortex';
+    axis?: [number, number, number];
+  }> | null;
+  /** Particles move from spawn position to center over lifetime */
+  attractToCenter?: boolean;
+  /** Use start position offset as direction */
+  startPositionAsDirection?: boolean;
+  /** Fade particles when intersecting scene geometry */
+  softParticles?: boolean;
+  /** Distance over which to fade soft particles */
+  softDistance?: number;
+  /** Plane collision settings */
+  collision?: {
+    plane?: { y: number };
+    bounce?: number;
+    friction?: number;
+    die?: boolean;
+    sizeBasedGravity?: number;
+  } | null;
+  /** Show debug control panel */
+  debug?: boolean;
+};
+
+export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(function VFXParticles(
   {
     name, // Optional name for registering with useVFXStore (enables VFXEmitter linking)
     maxParticles = 10000,
@@ -443,7 +603,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
   ref
 ) {
   const { gl: renderer } = useThree();
-  const spriteRef = useRef();
+  const spriteRef = useRef<THREE.Sprite | THREE.InstancedMesh | null>(null);
   const initialized = useRef(false);
   const nextIndex = useRef(0);
   const [emitting, setEmitting] = useState(autoStart);
@@ -505,7 +665,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
   ]);
 
   // Convert lifetime in seconds to fade rate per second (framerate independent)
-  const lifetimeToFadeRate = (seconds) => 1 / seconds;
+  const lifetimeToFadeRate = (seconds: number) => 1 / seconds;
 
   // Normalize props to [min, max] ranges
   const sizeRange = useMemo(() => toRange(size, [0.1, 0.3]), [size]);
@@ -533,7 +693,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
   ]);
 
   // Dispose curve texture when it changes or component unmounts
-  const prevCurveTextureRef = useRef(null);
+  const prevCurveTextureRef = useRef<THREE.DataTexture | null>(null);
   useEffect(() => {
     // Dispose previous texture if it changed
     if (
@@ -587,7 +747,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
       friction !== null &&
       'easing' in friction
     ) {
-      return easingToType(friction.easing);
+      return easingToType(friction.easing ?? 'linear');
     }
     return 0; // linear
   }, [friction]);
@@ -822,11 +982,11 @@ export const VFXParticles = forwardRef(function VFXParticles(
     // Colors
     uniforms.colorStartCount.value = colorStart.length;
     uniforms.colorEndCount.value = effectiveColorEnd.length;
-    startColors.forEach((c, i) => {
-      uniforms[`colorStart${i}`]?.value.setRGB(...c);
+    startColors.forEach((c: [number, number, number], i: number) => {
+      (uniforms as unknown as Record<string, { value: THREE.Color }>)[`colorStart${i}`]?.value.setRGB(...c);
     });
-    endColors.forEach((c, i) => {
-      uniforms[`colorEnd${i}`]?.value.setRGB(...c);
+    endColors.forEach((c: [number, number, number], i: number) => {
+      (uniforms as unknown as Record<string, { value: THREE.Color }>)[`colorEnd${i}`]?.value.setRGB(...c);
     });
 
     // Emitter shape
@@ -852,16 +1012,18 @@ export const VFXParticles = forwardRef(function VFXParticles(
     );
     for (let i = 0; i < MAX_ATTRACTORS; i++) {
       const a = attractorList[i];
+      // @ts-expect-error - Dynamic uniform indexing
+      const u = uniforms as Record<string, { value: THREE.Vector3 | number }>;
       if (a) {
-        uniforms[`attractor${i}Pos`].value.set(...(a.position ?? [0, 0, 0]));
-        uniforms[`attractor${i}Strength`].value = a.strength ?? 1;
-        uniforms[`attractor${i}Radius`].value = a.radius ?? 0; // 0 = infinite
-        uniforms[`attractor${i}Type`].value = a.type === 'vortex' ? 1 : 0;
-        uniforms[`attractor${i}Axis`].value
+        (u[`attractor${i}Pos`].value as THREE.Vector3).set(...(a.position ?? [0, 0, 0]));
+        u[`attractor${i}Strength`].value = a.strength ?? 1;
+        u[`attractor${i}Radius`].value = a.radius ?? 0; // 0 = infinite
+        u[`attractor${i}Type`].value = a.type === 'vortex' ? 1 : 0;
+        (u[`attractor${i}Axis`].value as THREE.Vector3)
           .set(...(a.axis ?? [0, 1, 0]))
           .normalize();
       } else {
-        uniforms[`attractor${i}Strength`].value = 0;
+        u[`attractor${i}Strength`].value = 0;
       }
     }
 
@@ -969,7 +1131,8 @@ export const VFXParticles = forwardRef(function VFXParticles(
   );
 
   // Helper to select color from array based on index
-  const selectColor = (idx, c0, c1, c2, c3, c4, c5, c6, c7) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const selectColor = (idx: any, c0: any, c1: any, c2: any, c3: any, c4: any, c5: any, c6: any, c7: any) => {
     return idx
       .lessThan(1)
       .select(
@@ -1122,7 +1285,8 @@ export const VFXParticles = forwardRef(function VFXParticles(
 
         // Helper: rotate a vector from Y-up to align with emitDir
         // Using Rodrigues' rotation formula simplified for rotating from (0,1,0)
-        const rotateToEmitDir = (localPos) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rotateToEmitDir = (localPos: any) => {
           // k × localPos where k = (kx, 0, kz)
           const crossX = kz.mul(localPos.y).negate();
           const crossY = kz.mul(localPos.x).sub(kx.mul(localPos.z));
@@ -1476,7 +1640,8 @@ export const VFXParticles = forwardRef(function VFXParticles(
         const attractorCount = uniforms.attractorCount;
 
         // Helper function to apply a single attractor's force
-        const applyAttractor = (aPos, aStrength, aRadius, aType, aAxis) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const applyAttractor = (aPos: any, aStrength: any, aRadius: any, aType: any, aAxis: any) => {
           If(aStrength.abs().greaterThan(0.001), () => {
             // Vector from particle to attractor
             const toAttractor = aPos.sub(position);
@@ -1700,6 +1865,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
       const offsetX = col.div(columns);
       const offsetY = rows.sub(1).sub(row).div(rows);
 
+      // @ts-expect-error - TSL node type mismatch
       sampleUV = scaledUV.add(vec2(offsetX, offsetY));
     }
 
@@ -2085,6 +2251,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
       return mesh;
     } else {
       // Sprite mode (default)
+      // @ts-expect-error - WebGPU SpriteNodeMaterial type mismatch
       const s = new THREE.Sprite(material);
       s.count = activeMaxParticles;
       s.frustumCulled = false;
@@ -2095,6 +2262,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
   // Initialize on mount
   useEffect(() => {
     if (!renderer || initialized.current) return;
+    // @ts-expect-error - WebGPU computeAsync not in WebGL types
     renderer.computeAsync(computeInit).then(() => {
       initialized.current = true;
     });
@@ -2102,15 +2270,21 @@ export const VFXParticles = forwardRef(function VFXParticles(
 
   // Apply spawn overrides to uniforms, returns restore function
   const applySpawnOverrides = useCallback(
-    (overrides) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (overrides: Record<string, any> | null) => {
       if (!overrides) return null;
 
-      const saved = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const saved: Record<string, any> = {};
 
       // Helper to save and set uniform value
-      const setUniform = (key, value) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const setUniform = (key: string, value: any) => {
+        // @ts-expect-error - Dynamic uniform access
         if (uniforms[key]) {
+          // @ts-expect-error - Dynamic uniform access
           saved[key] = uniforms[key].value;
+          // @ts-expect-error - Dynamic uniform access
           uniforms[key].value = value;
         }
       };
@@ -2161,19 +2335,21 @@ export const VFXParticles = forwardRef(function VFXParticles(
       // Gravity: [x, y, z]
       if (overrides.gravity !== undefined) {
         saved.gravity = uniforms.gravity.value.clone();
-        uniforms.gravity.value.set(...overrides.gravity);
+        uniforms.gravity.value.set(...(overrides.gravity as [number, number, number]));
       }
 
       // Colors - requires converting hex to RGB and setting multiple uniforms
+      // @ts-expect-error - Dynamic uniform access
+      const u = uniforms as Record<string, { value: THREE.Color }>;
       if (overrides.colorStart !== undefined) {
         const colors = overrides.colorStart.slice(0, 8).map(hexToRgb);
         while (colors.length < 8)
           colors.push(colors[colors.length - 1] || [1, 1, 1]);
         setUniform('colorStartCount', overrides.colorStart.length);
-        colors.forEach((c, i) => {
-          if (uniforms[`colorStart${i}`]) {
-            saved[`colorStart${i}`] = uniforms[`colorStart${i}`].value.clone();
-            uniforms[`colorStart${i}`].value.setRGB(...c);
+        colors.forEach((c: [number, number, number], i: number) => {
+          if (u[`colorStart${i}`]) {
+            saved[`colorStart${i}`] = u[`colorStart${i}`].value.clone();
+            u[`colorStart${i}`].value.setRGB(...c);
           }
         });
       }
@@ -2183,10 +2359,10 @@ export const VFXParticles = forwardRef(function VFXParticles(
         while (colors.length < 8)
           colors.push(colors[colors.length - 1] || [1, 1, 1]);
         setUniform('colorEndCount', overrides.colorEnd.length);
-        colors.forEach((c, i) => {
-          if (uniforms[`colorEnd${i}`]) {
-            saved[`colorEnd${i}`] = uniforms[`colorEnd${i}`].value.clone();
-            uniforms[`colorEnd${i}`].value.setRGB(...c);
+        colors.forEach((c: [number, number, number], i: number) => {
+          if (u[`colorEnd${i}`]) {
+            saved[`colorEnd${i}`] = u[`colorEnd${i}`].value.clone();
+            u[`colorEnd${i}`].value.setRGB(...c);
           }
         });
       }
@@ -2205,7 +2381,9 @@ export const VFXParticles = forwardRef(function VFXParticles(
       // Return restore function
       return () => {
         Object.entries(saved).forEach(([key, value]) => {
+          // @ts-expect-error - Dynamic uniform access
           if (uniforms[key]) {
+            // @ts-expect-error - Dynamic uniform access
             uniforms[key].value = value;
           }
         });
@@ -2216,7 +2394,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
 
   // Spawn function - internal
   const spawnInternal = useCallback(
-    (x, y, z, count = 20, overrides = null) => {
+    (x: number, y: number, z: number, count = 20, overrides: Record<string, unknown> | null = null) => {
       if (!initialized.current || !renderer) return;
 
       // Apply overrides and get restore function
@@ -2234,6 +2412,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
 
       // Run compute - GPU reads uniforms when dispatched, so restore immediately
       // This prevents race conditions when multiple emitters spawn in the same frame
+      // @ts-expect-error - WebGPU computeAsync not in WebGL types
       renderer.computeAsync(computeSpawn);
 
       // Restore original values synchronously after dispatch
@@ -2245,8 +2424,8 @@ export const VFXParticles = forwardRef(function VFXParticles(
   // Public spawn - uses position prop as offset, supports overrides
   // spawn(x, y, z, count, { colorStart: [...], direction: [...], ... })
   const spawn = useCallback(
-    (x = 0, y = 0, z = 0, count = 20, overrides = null) => {
-      const [px, py, pz] = positionRef.current;
+    (x = 0, y = 0, z = 0, count = 20, overrides: Record<string, unknown> | null = null) => {
+      const [px, py, pz] = positionRef.current ?? [0, 0, 0];
       spawnInternal(px + x, py + y, pz + z, count, overrides);
     },
     [spawnInternal]
@@ -2270,6 +2449,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
     uniforms.turbulenceTime.value += delta * turbSpeed;
 
     // Update particles - use ref to always get latest computeUpdate
+    // @ts-expect-error - WebGPU computeAsync not in WebGL types
     await renderer.computeAsync(computeUpdateRef.current);
 
     // Auto emit if enabled
@@ -2304,8 +2484,10 @@ export const VFXParticles = forwardRef(function VFXParticles(
   }, []);
 
   // Cleanup old material/renderObject when they change (not on unmount)
-  const prevMaterialRef = useRef(null);
-  const prevRenderObjectRef = useRef(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prevMaterialRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prevRenderObjectRef = useRef<any>(null);
 
   useEffect(() => {
     // Dispose previous material if it changed
@@ -2362,6 +2544,7 @@ export const VFXParticles = forwardRef(function VFXParticles(
         return emitting;
       },
       clear() {
+        // @ts-expect-error WebGPU renderer method
         renderer.computeAsync(computeInit);
         nextIndex.current = 0;
       },
@@ -2389,13 +2572,17 @@ export const VFXParticles = forwardRef(function VFXParticles(
   }, [name, particleAPI, registerParticles, unregisterParticles]);
 
   // Debug panel - no React state, direct ref mutation
-  const debugValuesRef = useRef(null);
-  const prevGeometryTypeRef = useRef(null);
-  const prevGeometryArgsRef = useRef(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const debugValuesRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prevGeometryTypeRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prevGeometryArgsRef = useRef<any>(null);
 
   // Imperative update function called by debug panel
   const handleDebugUpdate = useCallback(
-    (newValues) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (newValues: any) => {
       // Merge new values into existing (dirty tracking only sends changed keys)
       debugValuesRef.current = { ...debugValuesRef.current, ...newValues };
 
@@ -2545,8 +2732,10 @@ export const VFXParticles = forwardRef(function VFXParticles(
         while (startColors.length < 8)
           startColors.push(startColors[startColors.length - 1] || [1, 1, 1]);
         uniforms.colorStartCount.value = newValues.colorStart.length;
-        startColors.forEach((c, i) => {
+        startColors.forEach((c: [number, number, number], i: number) => {
+          // @ts-expect-error Dynamic uniform indexing
           if (uniforms[`colorStart${i}`]) {
+            // @ts-expect-error Dynamic uniform indexing
             uniforms[`colorStart${i}`].value.setRGB(...c);
           }
         });
@@ -2555,8 +2744,10 @@ export const VFXParticles = forwardRef(function VFXParticles(
         const currentColorEnd = debugValuesRef.current?.colorEnd;
         if (!currentColorEnd) {
           uniforms.colorEndCount.value = newValues.colorStart.length;
-          startColors.forEach((c, i) => {
+          startColors.forEach((c: [number, number, number], i: number) => {
+            // @ts-expect-error Dynamic uniform indexing
             if (uniforms[`colorEnd${i}`]) {
+              // @ts-expect-error Dynamic uniform indexing
               uniforms[`colorEnd${i}`].value.setRGB(...c);
             }
           });
@@ -2575,8 +2766,10 @@ export const VFXParticles = forwardRef(function VFXParticles(
           while (endColors.length < 8)
             endColors.push(endColors[endColors.length - 1] || [1, 1, 1]);
           uniforms.colorEndCount.value = effectiveEndColors.length;
-          endColors.forEach((c, i) => {
+          endColors.forEach((c: [number, number, number], i: number) => {
+            // @ts-expect-error Dynamic uniform indexing
             if (uniforms[`colorEnd${i}`]) {
+              // @ts-expect-error Dynamic uniform indexing
               uniforms[`colorEnd${i}`].value.setRGB(...c);
             }
           });
@@ -2818,7 +3011,8 @@ export const VFXParticles = forwardRef(function VFXParticles(
     };
 
     // Helper to detect geometry type from THREE.js geometry object
-    function detectGeometryTypeAndArgs(geo) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function detectGeometryTypeAndArgs(geo: any) {
       if (!geo) return { geometryType: 'none', geometryArgs: null };
 
       const name = geo.constructor.name;
@@ -2980,5 +3174,6 @@ export const VFXParticles = forwardRef(function VFXParticles(
     });
   }, [debug, handleDebugUpdate]);
 
+  // @ts-expect-error R3F primitive element
   return <primitive ref={spriteRef} object={renderObject} />;
 });

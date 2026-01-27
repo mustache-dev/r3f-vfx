@@ -4,10 +4,47 @@ import {
   useCallback,
   forwardRef,
   useImperativeHandle,
+  ReactNode,
+  RefObject,
 } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Quaternion } from 'three/webgpu';
+import { Vector3, Quaternion, Group } from 'three/webgpu';
+import type { Quaternion as QuaternionType } from 'three';
 import { useVFXStore } from './react-store';
+
+export interface VFXEmitterProps {
+  /** Name of the registered VFXParticles system */
+  name?: string;
+  /** Direct ref to VFXParticles (alternative to name) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  particlesRef?: RefObject<any> | any;
+  /** Local position offset */
+  position?: [number, number, number];
+  /** Particles to emit per burst */
+  emitCount?: number;
+  /** Seconds between emissions (0 = every frame) */
+  delay?: number;
+  /** Start emitting automatically */
+  autoStart?: boolean;
+  /** Keep emitting (false = emit once) */
+  loop?: boolean;
+  /** Transform direction by parent's world rotation */
+  localDirection?: boolean;
+  /** Direction override [[minX,maxX],[minY,maxY],[minZ,maxZ]] */
+  direction?: [[number, number], [number, number], [number, number]];
+  /** Per-spawn overrides (size, speed, colors, etc.) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  overrides?: Record<string, any> | null;
+  /** Callback fired after each emission */
+  onEmit?: (params: {
+    position: [number, number, number] | number[];
+    count: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    direction: any;
+  }) => void;
+  /** Children elements */
+  children?: ReactNode;
+}
 
 // Reusable temp objects for transforms (avoid allocations in render loop)
 const _worldPos = new Vector3();
@@ -72,10 +109,10 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
     overrides = null,
     onEmit,
     children,
-  },
+  }: VFXEmitterProps,
   ref
 ) {
-  const groupRef = useRef();
+  const groupRef = useRef<Group>(null);
   const emitAccumulator = useRef(0);
   const emitting = useRef(autoStart);
   const hasEmittedOnce = useRef(false);
@@ -85,28 +122,41 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
     if (particlesRef) {
       return particlesRef.current || particlesRef;
     }
+    // @ts-expect-error Zustand store getState
     return useVFXStore.getState().getParticles(name);
   }, [name, particlesRef]);
 
   // Transform a direction range by quaternion
-  const transformDirectionByQuat = useCallback((dirRange, quat) => {
-    if (!dirRange) return null;
+  const transformDirectionByQuat = useCallback(
+    (
+      dirRange: [[number, number], [number, number], [number, number]],
+      quat: QuaternionType
+    ): [[number, number], [number, number], [number, number]] => {
+      // Transform min and max direction vectors
+      // dirRange format: [[minX, maxX], [minY, maxY], [minZ, maxZ]]
+      const minDir = _tempVec.set(
+        dirRange[0][0],
+        dirRange[1][0],
+        dirRange[2][0]
+      );
+      minDir.applyQuaternion(quat);
 
-    // Transform min and max direction vectors
-    // dirRange format: [[minX, maxX], [minY, maxY], [minZ, maxZ]]
-    const minDir = _tempVec.set(dirRange[0][0], dirRange[1][0], dirRange[2][0]);
-    minDir.applyQuaternion(quat);
+      const maxDir = new Vector3(
+        dirRange[0][1],
+        dirRange[1][1],
+        dirRange[2][1]
+      );
+      maxDir.applyQuaternion(quat);
 
-    const maxDir = new Vector3(dirRange[0][1], dirRange[1][1], dirRange[2][1]);
-    maxDir.applyQuaternion(quat);
-
-    // Return transformed ranges (maintain min/max relationship per axis)
-    return [
-      [Math.min(minDir.x, maxDir.x), Math.max(minDir.x, maxDir.x)],
-      [Math.min(minDir.y, maxDir.y), Math.max(minDir.y, maxDir.y)],
-      [Math.min(minDir.z, maxDir.z), Math.max(minDir.z, maxDir.z)],
-    ];
-  }, []);
+      // Return transformed ranges (maintain min/max relationship per axis)
+      return [
+        [Math.min(minDir.x, maxDir.x), Math.max(minDir.x, maxDir.x)],
+        [Math.min(minDir.y, maxDir.y), Math.max(minDir.y, maxDir.y)],
+        [Math.min(minDir.z, maxDir.z), Math.max(minDir.z, maxDir.z)],
+      ];
+    },
+    []
+  );
 
   // Get current emission position and optionally transformed direction
   const getEmitParams = useCallback(() => {
@@ -194,7 +244,7 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
 
   // Burst: emit once immediately, regardless of autoStart
   const burst = useCallback(
-    (count) => {
+    (count: number) => {
       const particles = getParticleSystem();
       if (!particles?.spawn) return false;
 
@@ -257,8 +307,10 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
 
   // Render a group that inherits parent transforms
   return (
+    // @ts-expect-error
     <group ref={groupRef} position={position}>
       {children}
+      {/* @ts-expect-error */}
     </group>
   );
 });
@@ -275,7 +327,7 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
  * // Burst with overrides
  * burst([0, 0, 0], 100, { colorStart: ["#ff0000"] });
  */
-export function useVFXEmitter(name) {
+export function useVFXEmitter(name: string) {
   const getParticles = useVFXStore((s) => s.getParticles);
   const storeEmit = useVFXStore((s) => s.emit);
   const storeStart = useVFXStore((s) => s.start);
