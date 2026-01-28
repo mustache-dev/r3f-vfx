@@ -12,8 +12,14 @@
     "dev:r3f:example": "bun run -F r3f-example dev",
     "typecheck": "bun run -F '*' typecheck",
     "start": "bun run -F r3f-example start",
-    "build": "bun run -F '*' build",
-    "format": "prettier . --write"
+    "build": "run-s build:*",
+    "build:core": "bun run -F core-vfx build",
+    "build:r3f:library": "bun run -F r3f-vfx build",
+    "format": "prettier . --write",
+    "changeset:add": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "pub": "run-s build changeset:publish"
   },
   "devDependencies": {
     "@changesets/cli": "2.29.8",

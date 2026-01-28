@@ -21,7 +21,7 @@
     "build": "tsup",
     "typecheck": "tsc",
     "copy-readme": "cp ../../README.md README.md",
-    "prepublishOnly": "bun run typecheck && bun run build && bun run copy-readme"
+    "prepublishOnly": "bun run copy-readme"
   },
   "dependencies": {
     "zustand": "5.0.10"
