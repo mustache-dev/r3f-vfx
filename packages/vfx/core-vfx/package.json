@@ -1,0 +1,38 @@
+{
+  "name": "core-vfx",
+  "version": "0.0.3",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mustache-dev/r3f-vfx.git"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "typecheck": "tsc",
+    "copy-readme": "cp ../../README.md README.md",
+    "prepublishOnly": "bun run copy-readme"
+  },
+  "dependencies": {
+    "zustand": "5.0.10"
+  },
+  "devDependencies": {
+    "@types/three": "0.182.0",
+    "three": "0.182.0",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "three": ">=0.182.0"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "r3f-vfx",
+  "version": "0.0.9",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mustache-dev/r3f-vfx.git"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "typecheck": "tsc",
+    "copy-readme": "cp ../../README.md README.md",
+    "prepublishOnly": "bun run copy-readme"
+  },
+  "dependencies": {
+    "core-vfx": "0.0.3",
+    "zustand": "5.0.10"
+  },
+  "devDependencies": {
+    "@react-three/fiber": "9.5.0",
+    "@types/react": "19.2.10",
+    "@types/three": "0.182.0",
+    "three": "0.182.0",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "@react-three/fiber": ">=9.0.0 || >=10.0.0",
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0",
+    "three": ">=0.182.0"
+  },
+  "keywords": [
+    "3d",
+    "three",
+    "three.js",
+    "react",
+    "r3f",
+    "react-three-fiber",
+    "webgpu",
+    "webgl",
+    "canvas",
+    "vfx",
+    "particles"
+  ]
+}
