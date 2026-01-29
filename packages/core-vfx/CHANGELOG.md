@@ -1,5 +1,11 @@
 # core-vfx
 
+## 0.0.6
+
+### Patch Changes
+
+- adf87f7: fix curve not loaded
+
 ## 0.0.5
 
 ### Patch Changes

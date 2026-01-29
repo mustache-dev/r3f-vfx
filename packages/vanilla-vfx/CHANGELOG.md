@@ -1,5 +1,13 @@
 # vanilla-vfx
 
+## 0.0.6
+
+### Patch Changes
+
+- adf87f7: fix curve not loaded
+- Updated dependencies [adf87f7]
+  - core-vfx@0.0.6
+
 ## 0.0.5
 
 ### Patch Changes
