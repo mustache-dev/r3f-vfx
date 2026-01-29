@@ -58,4 +58,9 @@ export {
 } from './shaders'
 
 // Shader types
-export type { ParticleStorageArrays, ParticleUniforms, MaterialOptions, ShaderFeatures } from './shaders'
+export type {
+  ParticleStorageArrays,
+  ParticleUniforms,
+  MaterialOptions,
+  ShaderFeatures,
+} from './shaders'

@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { VFXParticles } from '../../../packages/r3f-vfx/src/'
 import {
   TextureLoader,
@@ -16,9 +16,9 @@ import {
   Node,
   Texture,
   Mesh,
-} from 'three/webgpu';
-import { useGLTF } from '@react-three/drei';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+} from 'three/webgpu'
+import { useGLTF } from '@react-three/drei'
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import {
   viewportSharedTexture,
   screenUV,
@@ -57,39 +57,39 @@ import {
   fract,
   normalViewGeometry,
   color,
-} from 'three/tsl';
+} from 'three/tsl'
 //console.log('push for vercel')
 export const Particles = () => {
   // const swordParticlesRef = useRef();
-  const smokeTexture = new TextureLoader().load('./2.png');
-  const noiseTexture = new TextureLoader().load('./noise.png');
-  const tileTexture = new TextureLoader().load('./tile-2.png');
-  tileTexture.minFilter = tileTexture.magFilter = NearestFilter;
+  const smokeTexture = new TextureLoader().load('./2.png')
+  const noiseTexture = new TextureLoader().load('./noise.png')
+  const tileTexture = new TextureLoader().load('./tile-2.png')
+  tileTexture.minFilter = tileTexture.magFilter = NearestFilter
   const { nodes: cherryBlossomPetalNodes } = useGLTF(
     '/cherry_blossom_petal-transformed.glb'
-  );
+  )
   const cherryBlossomPetalGeometry = useMemo(() => {
     // @ts-expect-error
-    const geo1 = cherryBlossomPetalNodes.Object_4.geometry;
-    return geo1;
-  }, [cherryBlossomPetalNodes]);
-  noiseTexture.wrapS = noiseTexture.wrapT = RepeatWrapping;
-  noiseTexture.minFilter = noiseTexture.magFilter = LinearFilter;
+    const geo1 = cherryBlossomPetalNodes.Object_4.geometry
+    return geo1
+  }, [cherryBlossomPetalNodes])
+  noiseTexture.wrapS = noiseTexture.wrapT = RepeatWrapping
+  noiseTexture.minFilter = noiseTexture.magFilter = LinearFilter
 
   // Load sword model and merge geometries
-  const { nodes } = useGLTF('/sword1-transformed.glb');
+  const { nodes } = useGLTF('/sword1-transformed.glb')
 
   const swordGeometry = useMemo(() => {
     // @ts-expect-error
-    const geo1 = nodes.Cube001.geometry;
-    return geo1;
-  }, [nodes]);
+    const geo1 = nodes.Cube001.geometry
+    return geo1
+  }, [nodes])
 
-  const impactRef = useRef<Mesh>(null);
+  const impactRef = useRef<Mesh>(null)
   // Sphere geometry for bouncing balls
   const sphereGeometry = useMemo(() => {
-    return new SphereGeometry(0.5, 16, 16);
-  }, []);
+    return new SphereGeometry(0.5, 16, 16)
+  }, [])
 
   // const polarMat = useMemo(() => {
   //   const mat = new MeshBasicNodeMaterial()
@@ -109,104 +109,104 @@ export const Particles = () => {
 
   useFrame(({ camera }) => {
     if (impactRef.current) {
-      impactRef.current.lookAt(camera.position);
+      impactRef.current.lookAt(camera.position)
     }
-  });
+  })
 
   const polarMat = useMemo(() => {
-    const mat = new MeshBasicNodeMaterial();
-    mat.transparent = true;
+    const mat = new MeshBasicNodeMaterial()
+    mat.transparent = true
 
     // const fresnelPower = float(3.0);
-    const orangeGlow = color('#ffa600').mul(20);
+    const orangeGlow = color('#ffa600').mul(20)
 
-    const fade = pow(normalGeometry.z.oneMinus(), 0.5);
+    const fade = pow(normalGeometry.z.oneMinus(), 0.5)
 
-    const progress = time.mod(1);
+    const progress = time.mod(1)
 
-    const vUv = positionLocal.xy.mul(0.5).add(0.5);
+    const vUv = positionLocal.xy.mul(0.5).add(0.5)
 
-    const centeredUv = vUv.sub(0.5);
-    const angle = atan(centeredUv.y, centeredUv.x);
-    const radius = length(centeredUv);
+    const centeredUv = vUv.sub(0.5)
+    const angle = atan(centeredUv.y, centeredUv.x)
+    const radius = length(centeredUv)
 
-    const invRadius = radius.oneMinus();
-    const warpedRadius = pow(radius, float(1));
+    const invRadius = radius.oneMinus()
+    const warpedRadius = pow(radius, float(1))
 
-    const speed = float(0.3);
-    const radialPhase = warpedRadius.sub(time.mul(speed));
-    const animatedRadius = fract(radialPhase);
+    const speed = float(0.3)
+    const radialPhase = warpedRadius.sub(time.mul(speed))
+    const animatedRadius = fract(radialPhase)
 
-    const normalizedAngle = angle.add(Math.PI).div(PI2).add(time.mul(0));
+    const normalizedAngle = angle.add(Math.PI).div(PI2).add(time.mul(0))
 
-    const fracAngle = fract(normalizedAngle.mul(6));
+    const fracAngle = fract(normalizedAngle.mul(6))
 
-    const polarUv = vec2(fracAngle, animatedRadius);
-    const tile = texture(tileTexture, polarUv);
+    const polarUv = vec2(fracAngle, animatedRadius)
+    const tile = texture(tileTexture, polarUv)
 
-    mat.colorNode = vec4(orangeGlow, tile.r.sub(fade));
+    mat.colorNode = vec4(orangeGlow, tile.r.sub(fade))
 
-    return mat;
-  }, []);
+    return mat
+  }, [])
 
   const distortionBackdrop = ({ progress }: { progress: Node }) => {
-    const vUv = screenUV;
+    const vUv = screenUV
 
-    const fresnelPower = float(2.0);
-    const ringCount = float(5.0);
-    const distortionStrength = float(0.08);
+    const fresnelPower = float(2.0)
+    const ringCount = float(5.0)
+    const distortionStrength = float(0.08)
 
-    const effectIntensity = progress.smoothstep(float(0), float(0.3));
+    const effectIntensity = progress.smoothstep(float(0), float(0.3))
 
     const fresnelDot = max(
       dot(normalize(positionViewDirection), normalize(normalView)),
       float(0)
-    );
-    const fresnel = pow(float(1).sub(fresnelDot), fresnelPower);
+    )
+    const fresnel = pow(float(1).sub(fresnelDot), fresnelPower)
 
-    const animatedRingCount = ringCount.mul(effectIntensity);
-    const ringsRaw = sin(fresnel.mul(animatedRingCount).mul(PI));
-    const rings = abs(ringsRaw).mul(effectIntensity);
+    const animatedRingCount = ringCount.mul(effectIntensity)
+    const ringsRaw = sin(fresnel.mul(animatedRingCount).mul(PI))
+    const rings = abs(ringsRaw).mul(effectIntensity)
 
-    const distortDir = normalize(vUv.sub(vec2(0.5, 0.5)));
-    const distortion = distortDir.mul(rings).mul(distortionStrength);
+    const distortDir = normalize(vUv.sub(vec2(0.5, 0.5)))
+    const distortion = distortDir.mul(rings).mul(distortionStrength)
 
-    const distortedUvR = vUv.add(distortion.mul(1.2));
-    const distortedUvG = vUv.add(distortion);
-    const distortedUvB = vUv.add(distortion.mul(0.8));
+    const distortedUvR = vUv.add(distortion.mul(1.2))
+    const distortedUvG = vUv.add(distortion)
+    const distortedUvB = vUv.add(distortion.mul(0.8))
 
-    const r = viewportSharedTexture(distortedUvR).r;
-    const g = viewportSharedTexture(distortedUvG).g;
-    const b = viewportSharedTexture(distortedUvB).b;
+    const r = viewportSharedTexture(distortedUvR).r
+    const g = viewportSharedTexture(distortedUvG).g
+    const b = viewportSharedTexture(distortedUvB).b
 
-    return vec3(r, g, b);
-  };
+    return vec3(r, g, b)
+  }
   const triplanar = ({
     position,
     normal,
     scale = 1.0,
     map,
   }: {
-    position: Node;
-    normal: Node;
-    scale: number;
-    map: Texture;
+    position: Node
+    normal: Node
+    scale: number
+    map: Texture
   }) => {
-    const pos = position.mul(scale);
-    const n = abs(normal);
+    const pos = position.mul(scale)
+    const n = abs(normal)
 
     // Blend weights (raised to power for sharper blending)
-    const weights = pow(n, vec3(4.0));
-    const blend = weights.div(weights.x.add(weights.y).add(weights.z));
+    const weights = pow(n, vec3(4.0))
+    const blend = weights.div(weights.x.add(weights.y).add(weights.z))
 
     // Sample texture from 3 projections
-    const texX = texture(map, pos.yz);
-    const texY = texture(map, pos.xz);
-    const texZ = texture(map, pos.xy);
+    const texX = texture(map, pos.yz)
+    const texY = texture(map, pos.xz)
+    const texZ = texture(map, pos.xy)
 
     // Weighted blend
-    return texX.mul(blend.x).add(texY.mul(blend.y)).add(texZ.mul(blend.z));
-  };
+    return texX.mul(blend.x).add(texY.mul(blend.y)).add(texZ.mul(blend.z))
+  }
 
   const stylizedSphereBackdrop = ({ progress }: { progress: Node }) => {
     // Fresnel: 0 at center, 1 at edges (inverted from before)
@@ -241,17 +241,17 @@ export const Particles = () => {
     // // Multiply by fresnel to only show at edges
     // const finalColor = mix(color, purpleBlueGlow.mul(4), fresnel); // Boost intensity
 
-    const color = texture(noiseTexture, positionLocal.xy.sub(time));
+    const color = texture(noiseTexture, positionLocal.xy.sub(time))
 
-    Discard(progress.greaterThanEqual(0.3));
+    Discard(progress.greaterThanEqual(0.3))
 
-    const finalColor = vec4(vec3(progress), 1);
+    const finalColor = vec4(vec3(progress), 1)
 
-    return finalColor;
-  };
+    return finalColor
+  }
 
   // Spawn swords at 4 uniform positions, all emitting in the same direction
-  const spawnAccumulator = useRef(0);
+  const spawnAccumulator = useRef(0)
 
   return (
     <group>
@@ -639,7 +639,7 @@ export const Particles = () => {
   emitterDirection={[0, 1, 0]}
 /> */}
       {/* Curve Baking Demo - Shows fadeSizeCurve and velocityCurve features */}
-      <VFXParticles debug/>
+      <VFXParticles debug />
       {/* <VFXParticles
         // debug={true}
         autoStart={true}
@@ -728,7 +728,6 @@ export const Particles = () => {
         }}
       /> */}
 
-      
       {/* DISK emitter - ground smoke/portal effect */}
       {/* <VFXParticles
         autoStart={true}
@@ -964,7 +963,7 @@ export const Particles = () => {
         emitterDirection={[0, 1, 0]}
       /> */}
     </group>
-  );
-};
+  )
+}
 
-useGLTF.preload('/sword1-transformed.glb');
+useGLTF.preload('/sword1-transformed.glb')

@@ -1,4 +1,4 @@
-import { VFXParticles, Appearance, EmitterShape } from 'r3f-vfx';
+import { VFXParticles, Appearance, EmitterShape } from 'r3f-vfx'
 
 export const Spark = () => {
   return (
@@ -27,5 +27,5 @@ export const Spark = () => {
       emitterShape={EmitterShape.POINT}
       emitCount={10}
     />
-  );
-};
+  )
+}

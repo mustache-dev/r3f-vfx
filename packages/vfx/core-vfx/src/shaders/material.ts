@@ -23,7 +23,11 @@ import {
 } from 'three/tsl'
 import { Appearance, Lighting } from '../constants'
 import type { Node } from 'three/webgpu'
-import type { ParticleStorageArrays, ParticleUniforms, MaterialOptions } from './types'
+import type {
+  ParticleStorageArrays,
+  ParticleUniforms,
+  MaterialOptions,
+} from './types'
 
 /**
  * Creates the particle material (either SpriteNodeMaterial or MeshNodeMaterial).
@@ -58,7 +62,8 @@ export const createParticleMaterial = (
   const lifetime = storage.lifetimes.element(instanceIndex)
   const particleSize = storage.particleSizes.element(instanceIndex)
   // Optional arrays (null when feature unused) - use defaults
-  const particleRotation = storage.particleRotations?.element(instanceIndex) ?? vec3(0, 0, 0)
+  const particleRotation =
+    storage.particleRotations?.element(instanceIndex) ?? vec3(0, 0, 0)
   const pColorStart = storage.particleColorStarts?.element(instanceIndex)
   const pColorEnd = storage.particleColorEnds?.element(instanceIndex)
   const particlePos = storage.positions.element(instanceIndex)
@@ -80,12 +85,18 @@ export const createParticleMaterial = (
   // Size multiplier: use curve if enabled, otherwise interpolate fadeSize prop
   const sizeMultiplier = uniforms.fadeSizeCurveEnabled
     .greaterThan(0.5)
-    .select(curveSample.x, mix(uniforms.fadeSizeStart, uniforms.fadeSizeEnd, progress))
+    .select(
+      curveSample.x,
+      mix(uniforms.fadeSizeStart, uniforms.fadeSizeEnd, progress)
+    )
 
   // Opacity multiplier: use curve if enabled, otherwise interpolate fadeOpacity prop
   const opacityMultiplier = uniforms.fadeOpacityCurveEnabled
     .greaterThan(0.5)
-    .select(curveSample.y, mix(uniforms.fadeOpacityStart, uniforms.fadeOpacityEnd, progress))
+    .select(
+      curveSample.y,
+      mix(uniforms.fadeOpacityStart, uniforms.fadeOpacityEnd, progress)
+    )
 
   // Calculate UV - with flipbook support
   let sampleUV = uv()
@@ -153,7 +164,11 @@ export const createParticleMaterial = (
 
   // Apply custom opacity node if provided
   let finalOpacity = opacityNode
-    ? baseOpacity.mul(typeof opacityNode === 'function' ? opacityNode(particleData) : opacityNode)
+    ? baseOpacity.mul(
+        typeof opacityNode === 'function'
+          ? opacityNode(particleData)
+          : opacityNode
+      )
     : baseOpacity
 
   // Soft particles - fade when near scene geometry
@@ -201,7 +216,9 @@ export const createParticleMaterial = (
     const stretchAmount = uniforms.stretchEnabled
       .greaterThan(0.5)
       .select(
-        float(1).add(effectiveSpeed.mul(uniforms.stretchFactor)).min(uniforms.stretchMax),
+        float(1)
+          .add(effectiveSpeed.mul(uniforms.stretchFactor))
+          .min(uniforms.stretchMax),
         float(1)
       )
 
@@ -219,12 +236,24 @@ export const createParticleMaterial = (
         axisIndex
           .lessThan(0.5)
           .select(
-            vec3(positionLocal.x.mul(stretchAmount), positionLocal.y, positionLocal.z),
+            vec3(
+              positionLocal.x.mul(stretchAmount),
+              positionLocal.y,
+              positionLocal.z
+            ),
             axisIndex
               .lessThan(1.5)
               .select(
-                vec3(positionLocal.x, positionLocal.y.mul(stretchAmount), positionLocal.z),
-                vec3(positionLocal.x, positionLocal.y, positionLocal.z.mul(stretchAmount))
+                vec3(
+                  positionLocal.x,
+                  positionLocal.y.mul(stretchAmount),
+                  positionLocal.z
+                ),
+                vec3(
+                  positionLocal.x,
+                  positionLocal.y,
+                  positionLocal.z.mul(stretchAmount)
+                )
               )
           ),
         positionLocal
@@ -240,7 +269,10 @@ export const createParticleMaterial = (
       // Get the local axis we want to align with velocity
       const localAxis = axisIndex
         .lessThan(0.5)
-        .select(vec3(1, 0, 0), axisIndex.lessThan(1.5).select(vec3(0, 1, 0), vec3(0, 0, 1)))
+        .select(
+          vec3(1, 0, 0),
+          axisIndex.lessThan(1.5).select(vec3(0, 1, 0), vec3(0, 0, 1))
+        )
 
       // Rodrigues' rotation formula
       const dotProduct = localAxis.dot(velDir).clamp(-1, 1)
@@ -248,7 +280,10 @@ export const createParticleMaterial = (
       const crossLen = crossProduct.length()
 
       const needsRotation = crossLen.greaterThan(0.0001)
-      const rotAxis = needsRotation.select(crossProduct.div(crossLen), vec3(0, 1, 0))
+      const rotAxis = needsRotation.select(
+        crossProduct.div(crossLen),
+        vec3(0, 1, 0)
+      )
 
       const cosAngleVal = dotProduct
       const sinAngleVal = crossLen
@@ -322,19 +357,25 @@ export const createParticleMaterial = (
     // Apply custom backdrop node if provided
     if (backdropNode) {
       mat.backdropNode =
-        typeof backdropNode === 'function' ? backdropNode(particleData) : backdropNode
+        typeof backdropNode === 'function'
+          ? backdropNode(particleData)
+          : backdropNode
     }
 
     // Apply custom cast shadow node if provided
     if (castShadowNode) {
       mat.castShadowNode =
-        typeof castShadowNode === 'function' ? castShadowNode(particleData) : castShadowNode
+        typeof castShadowNode === 'function'
+          ? castShadowNode(particleData)
+          : castShadowNode
     }
 
     // Apply custom alpha test node if provided
     if (alphaTestNode) {
       mat.alphaTestNode =
-        typeof alphaTestNode === 'function' ? alphaTestNode(particleData) : alphaTestNode
+        typeof alphaTestNode === 'function'
+          ? alphaTestNode(particleData)
+          : alphaTestNode
     }
 
     return mat
@@ -360,19 +401,25 @@ export const createParticleMaterial = (
     // Apply custom backdrop node if provided
     if (backdropNode) {
       mat.backdropNode =
-        typeof backdropNode === 'function' ? backdropNode(particleData) : backdropNode
+        typeof backdropNode === 'function'
+          ? backdropNode(particleData)
+          : backdropNode
     }
 
     // Apply custom cast shadow node if provided
     if (castShadowNode) {
       mat.castShadowNode =
-        typeof castShadowNode === 'function' ? castShadowNode(particleData) : castShadowNode
+        typeof castShadowNode === 'function'
+          ? castShadowNode(particleData)
+          : castShadowNode
     }
 
     // Apply custom alpha test node if provided
     if (alphaTestNode) {
       mat.alphaTestNode =
-        typeof alphaTestNode === 'function' ? alphaTestNode(particleData) : alphaTestNode
+        typeof alphaTestNode === 'function'
+          ? alphaTestNode(particleData)
+          : alphaTestNode
     }
 
     return mat

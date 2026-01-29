@@ -5,7 +5,10 @@ import type { ParticleStorageArrays } from './types'
  * Creates the initialization compute shader that sets all particles to dead state.
  * This should be run once when the particle system is created.
  */
-export const createInitCompute = (storage: ParticleStorageArrays, maxParticles: number) => {
+export const createInitCompute = (
+  storage: ParticleStorageArrays,
+  maxParticles: number
+) => {
   return Fn(() => {
     const position = storage.positions.element(instanceIndex)
     const velocity = storage.velocities.element(instanceIndex)

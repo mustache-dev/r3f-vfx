@@ -27,16 +27,16 @@ npm install three @react-three/fiber react
 ## Quick Start
 
 ```tsx
-import { Canvas } from '@react-three/fiber';
-import { VFXParticles, Appearance, EmitterShape } from 'r3f-vfx';
-import * as THREE from 'three/webgpu';
+import { Canvas } from '@react-three/fiber'
+import { VFXParticles, Appearance, EmitterShape } from 'r3f-vfx'
+import * as THREE from 'three/webgpu'
 
 function App() {
   return (
     <Canvas>
       <VFXParticles debug />
     </Canvas>
-  );
+  )
 }
 ```
 
@@ -114,8 +114,8 @@ The main particle system component.
 
 ```ts
 interface StretchConfig {
-  factor: number; // Stretch multiplier
-  maxStretch: number; // Maximum stretch amount
+  factor: number // Stretch multiplier
+  maxStretch: number // Maximum stretch amount
 }
 ```
 
@@ -127,9 +127,9 @@ interface StretchConfig {
 
 ```ts
 interface TurbulenceConfig {
-  intensity: number; // Turbulence strength
-  frequency: number; // Noise scale
-  speed: number; // Animation speed
+  intensity: number // Turbulence strength
+  frequency: number // Noise scale
+  speed: number // Animation speed
 }
 ```
 
@@ -142,11 +142,11 @@ interface TurbulenceConfig {
 
 ```ts
 interface AttractorConfig {
-  position: [x, y, z];
-  strength: number; // Positive = attract, negative = repel
-  radius?: number; // 0 = infinite range
-  type?: 'point' | 'vortex';
-  axis?: [x, y, z]; // Vortex rotation axis
+  position: [x, y, z]
+  strength: number // Positive = attract, negative = repel
+  radius?: number // 0 = infinite range
+  type?: 'point' | 'vortex'
+  axis?: [x, y, z] // Vortex rotation axis
 }
 ```
 
@@ -158,11 +158,11 @@ interface AttractorConfig {
 
 ```ts
 interface CollisionConfig {
-  plane: { y: number }; // Plane Y position
-  bounce?: number; // Bounce factor (0-1)
-  friction?: number; // Horizontal friction
-  die?: boolean; // Kill on collision
-  sizeBasedGravity?: number; // Gravity multiplier by size
+  plane: { y: number } // Plane Y position
+  bounce?: number // Bounce factor (0-1)
+  friction?: number // Horizontal friction
+  die?: boolean // Kill on collision
+  sizeBasedGravity?: number // Gravity multiplier by size
 }
 ```
 
@@ -180,10 +180,10 @@ All curves use Bezier spline format:
 ```ts
 interface CurveData {
   points: Array<{
-    pos: [x, y]; // Position (x: 0-1 progress, y: value)
-    handleIn?: [x, y]; // Bezier handle in (offset)
-    handleOut?: [x, y]; // Bezier handle out (offset)
-  }>;
+    pos: [x, y] // Position (x: 0-1 progress, y: value)
+    handleIn?: [x, y] // Bezier handle in (offset)
+    handleOut?: [x, y] // Bezier handle out (offset)
+  }>
 }
 ```
 
@@ -205,21 +205,21 @@ interface CurveData {
 | `alphaTestNode`  | `NodeFunction` | Alpha test/discard             |
 
 ```ts
-type NodeFunction = (data: ParticleData, defaultColor?: Node) => Node;
+type NodeFunction = (data: ParticleData, defaultColor?: Node) => Node
 
 interface ParticleData {
-  progress: Node; // 0 → 1 over lifetime
-  lifetime: Node; // 1 → 0 over lifetime
-  position: Node; // vec3 world position
-  velocity: Node; // vec3 velocity
-  size: Node; // float size
-  rotation: Node; // vec3 rotation
-  colorStart: Node; // vec3 start color
-  colorEnd: Node; // vec3 end color
-  color: Node; // vec3 interpolated color
-  intensifiedColor: Node; // color × intensity
-  shapeMask: Node; // float alpha mask
-  index: Node; // particle index
+  progress: Node // 0 → 1 over lifetime
+  lifetime: Node // 1 → 0 over lifetime
+  position: Node // vec3 world position
+  velocity: Node // vec3 velocity
+  size: Node // float size
+  rotation: Node // vec3 rotation
+  colorStart: Node // vec3 start color
+  colorEnd: Node // vec3 end color
+  color: Node // vec3 interpolated color
+  intensifiedColor: Node // color × intensity
+  shapeMask: Node // float alpha mask
+  index: Node // particle index
 }
 ```
 
@@ -232,8 +232,8 @@ interface ParticleData {
 
 ```ts
 interface FlipbookConfig {
-  rows: number;
-  columns: number;
+  rows: number
+  columns: number
 }
 ```
 
@@ -276,13 +276,13 @@ Decoupled emitter component that links to a VFXParticles system.
 
 ```ts
 interface VFXEmitterAPI {
-  emit(): boolean; // Emit at current position
-  burst(count?: number): boolean; // Burst emit
-  start(): void; // Start auto-emission
-  stop(): void; // Stop auto-emission
-  isEmitting: boolean; // Current state
-  getParticleSystem(): ParticleAPI;
-  group: THREE.Group; // The group element
+  emit(): boolean // Emit at current position
+  burst(count?: number): boolean // Burst emit
+  start(): void // Start auto-emission
+  stop(): void // Stop auto-emission
+  isEmitting: boolean // Current state
+  getParticleSystem(): ParticleAPI
+  group: THREE.Group // The group element
 }
 ```
 
@@ -292,13 +292,13 @@ Programmatic emitter control.
 
 ```tsx
 function MyComponent() {
-  const { emit, burst, start, stop } = useVFXEmitter('sparks');
+  const { emit, burst, start, stop } = useVFXEmitter('sparks')
 
   const handleClick = () => {
-    burst([0, 1, 0], 100, { colorStart: ['#ff0000'] });
-  };
+    burst([0, 1, 0], 100, { colorStart: ['#ff0000'] })
+  }
 
-  return <mesh onClick={handleClick}>...</mesh>;
+  return <mesh onClick={handleClick}>...</mesh>
 }
 ```
 
@@ -310,18 +310,18 @@ interface UseVFXEmitterResult {
     position?: [x, y, z],
     count?: number,
     overrides?: SpawnOverrides
-  ): boolean;
+  ): boolean
   burst(
     position?: [x, y, z],
     count?: number,
     overrides?: SpawnOverrides
-  ): boolean;
-  start(): boolean;
-  stop(): boolean;
-  clear(): boolean;
-  isEmitting(): boolean;
-  getUniforms(): Record<string, { value: unknown }>;
-  getParticles(): ParticleAPI;
+  ): boolean
+  start(): boolean
+  stop(): boolean
+  clear(): boolean
+  isEmitting(): boolean
+  getUniforms(): Record<string, { value: unknown }>
+  getParticles(): ParticleAPI
 }
 ```
 
@@ -330,17 +330,17 @@ interface UseVFXEmitterResult {
 Zustand store for managing particle systems.
 
 ```ts
-const store = useVFXStore();
+const store = useVFXStore()
 
 // Access registered particle systems
-const sparks = store.getParticles('sparks');
-sparks?.spawn(0, 0, 0, 50);
+const sparks = store.getParticles('sparks')
+sparks?.spawn(0, 0, 0, 50)
 
 // Store methods
-store.emit('sparks', { x: 0, y: 0, z: 0, count: 20 });
-store.start('sparks');
-store.stop('sparks');
-store.clear('sparks');
+store.emit('sparks', { x: 0, y: 0, z: 0, count: 20 })
+store.start('sparks')
+store.stop('sparks')
+store.clear('sparks')
 ```
 
 ## Examples
@@ -388,9 +388,9 @@ store.clear('sparks');
 ### 3D Geometry Particles
 
 ```tsx
-import { BoxGeometry } from 'three/webgpu';
+import { BoxGeometry } from 'three/webgpu'
 
-<VFXParticles
+;<VFXParticles
   geometry={new BoxGeometry(1, 1, 1)}
   maxParticles={500}
   size={[0.1, 0.2]}
@@ -404,7 +404,7 @@ import { BoxGeometry } from 'three/webgpu';
   ]}
   shadow={true}
   lighting={Lighting.STANDARD}
-/>;
+/>
 ```
 
 ### Turbulent Smoke
@@ -464,7 +464,7 @@ import type {
   TurbulenceConfig,
   CollisionConfig,
   AttractorConfig,
-} from 'r3f-vfx';
+} from 'r3f-vfx'
 ```
 
 ## License

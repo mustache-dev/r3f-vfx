@@ -1,4 +1,4 @@
-import type { Node } from 'three/webgpu';
+import type { Node } from 'three/webgpu'
 
 // Helper to select color from array based on index (up to 8 colors)
 export const selectColor = (
@@ -32,12 +32,10 @@ export const selectColor = (
                     .lessThan(5)
                     .select(
                       c4,
-                      idx
-                        .lessThan(6)
-                        .select(c5, idx.lessThan(7).select(c6, c7))
+                      idx.lessThan(6).select(c5, idx.lessThan(7).select(c6, c7))
                     )
                 )
             )
         )
-    );
-};
+    )
+}

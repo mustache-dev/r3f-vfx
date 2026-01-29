@@ -1,17 +1,17 @@
-import type * as THREE from 'three/webgpu';
-import type { Appearance, Blending, EmitterShape, Lighting } from './constants';
+import type * as THREE from 'three/webgpu'
+import type { Appearance, Blending, EmitterShape, Lighting } from './constants'
 
 // Curve point for Bezier splines
 export type CurvePoint = {
-  pos: [number, number];
-  handleIn?: [number, number];
-  handleOut?: [number, number];
-};
+  pos: [number, number]
+  handleIn?: [number, number]
+  handleOut?: [number, number]
+}
 
 // Curve data structure
 export type CurveData = {
-  points: CurvePoint[];
-} | null;
+  points: CurvePoint[]
+} | null
 
 // 3D rotation/direction input types
 export type Rotation3DInput =
@@ -19,146 +19,146 @@ export type Rotation3DInput =
   | [number, number]
   | [[number, number], [number, number], [number, number]]
   | null
-  | undefined;
+  | undefined
 
 // Particle data passed to custom node functions
-export type ParticleData = Record<string, unknown>;
+export type ParticleData = Record<string, unknown>
 
 // Turbulence configuration
 export type TurbulenceConfig = {
-  intensity: number;
-  frequency?: number;
-  speed?: number;
-} | null;
+  intensity: number
+  frequency?: number
+  speed?: number
+} | null
 
 // Attractor configuration
 export type AttractorConfig = {
-  position?: [number, number, number];
-  strength?: number;
-  radius?: number;
-  type?: 'point' | 'vortex';
-  axis?: [number, number, number];
-};
+  position?: [number, number, number]
+  strength?: number
+  radius?: number
+  type?: 'point' | 'vortex'
+  axis?: [number, number, number]
+}
 
 // Collision configuration
 export type CollisionConfig = {
-  plane?: { y: number };
-  bounce?: number;
-  friction?: number;
-  die?: boolean;
-  sizeBasedGravity?: number;
-} | null;
+  plane?: { y: number }
+  bounce?: number
+  friction?: number
+  die?: boolean
+  sizeBasedGravity?: number
+} | null
 
 // Friction configuration
 export type FrictionConfig = {
-  intensity?: number | [number, number];
-  easing?: string;
-};
+  intensity?: number | [number, number]
+  easing?: string
+}
 
 // Flipbook configuration
 export type FlipbookConfig = {
-  rows: number;
-  columns: number;
-} | null;
+  rows: number
+  columns: number
+} | null
 
 // Stretch by speed configuration
 export type StretchConfig = {
-  factor: number;
-  maxStretch: number;
-} | null;
+  factor: number
+  maxStretch: number
+} | null
 
 // Base particle system props (framework-agnostic)
 export type BaseParticleProps = {
   /** Maximum number of particles */
-  maxParticles?: number;
+  maxParticles?: number
   /** Particle size [min, max] or single value */
-  size?: number | [number, number];
+  size?: number | [number, number]
   /** Array of hex color strings for start color */
-  colorStart?: string[];
+  colorStart?: string[]
   /** Array of hex color strings for end color (null = use colorStart) */
-  colorEnd?: string[] | null;
+  colorEnd?: string[] | null
   /** Fade size [start, end] multiplier over lifetime */
-  fadeSize?: number | [number, number];
+  fadeSize?: number | [number, number]
   /** Curve data for size over lifetime */
-  fadeSizeCurve?: CurveData;
+  fadeSizeCurve?: CurveData
   /** Fade opacity [start, end] multiplier over lifetime */
-  fadeOpacity?: number | [number, number];
+  fadeOpacity?: number | [number, number]
   /** Curve data for opacity over lifetime */
-  fadeOpacityCurve?: CurveData;
+  fadeOpacityCurve?: CurveData
   /** Curve data for velocity over lifetime */
-  velocityCurve?: CurveData;
+  velocityCurve?: CurveData
   /** Gravity vector [x, y, z] */
-  gravity?: [number, number, number];
+  gravity?: [number, number, number]
   /** Particle lifetime in seconds [min, max] or single value */
-  lifetime?: number | [number, number];
+  lifetime?: number | [number, number]
   /** Direction ranges for velocity */
-  direction?: Rotation3DInput;
+  direction?: Rotation3DInput
   /** Start position offset ranges */
-  startPosition?: Rotation3DInput;
+  startPosition?: Rotation3DInput
   /** Speed [min, max] or single value */
-  speed?: number | [number, number];
+  speed?: number | [number, number]
   /** Friction settings */
-  friction?: FrictionConfig;
+  friction?: FrictionConfig
   /** Particle appearance type */
-  appearance?: (typeof Appearance)[keyof typeof Appearance];
+  appearance?: (typeof Appearance)[keyof typeof Appearance]
   /** Alpha map texture */
-  alphaMap?: THREE.Texture | null;
+  alphaMap?: THREE.Texture | null
   /** Flipbook animation settings */
-  flipbook?: FlipbookConfig;
+  flipbook?: FlipbookConfig
   /** Rotation [min, max] in radians or 3D rotation ranges */
-  rotation?: Rotation3DInput;
+  rotation?: Rotation3DInput
   /** Rotation speed [min, max] in radians/second or 3D ranges */
-  rotationSpeed?: Rotation3DInput;
+  rotationSpeed?: Rotation3DInput
   /** Curve data for rotation speed over lifetime */
-  rotationSpeedCurve?: CurveData;
+  rotationSpeedCurve?: CurveData
   /** Custom geometry for 3D particles */
-  geometry?: THREE.BufferGeometry | null;
+  geometry?: THREE.BufferGeometry | null
   /** Rotate geometry to face velocity direction */
-  orientToDirection?: boolean;
+  orientToDirection?: boolean
   /** Which local axis aligns with velocity */
-  orientAxis?: string;
+  orientAxis?: string
   /** Stretch particles based on speed */
-  stretchBySpeed?: StretchConfig;
+  stretchBySpeed?: StretchConfig
   /** Material lighting type for geometry mode */
-  lighting?: (typeof Lighting)[keyof typeof Lighting];
+  lighting?: (typeof Lighting)[keyof typeof Lighting]
   /** Enable shadows on geometry instances */
-  shadow?: boolean;
+  shadow?: boolean
   /** Blending mode */
-  blending?: (typeof Blending)[keyof typeof Blending];
+  blending?: (typeof Blending)[keyof typeof Blending]
   /** Color intensity multiplier */
-  intensity?: number;
+  intensity?: number
   /** Emitter position [x, y, z] */
-  position?: [number, number, number];
+  position?: [number, number, number]
   /** Start emitting automatically */
-  autoStart?: boolean;
+  autoStart?: boolean
   /** Delay between emissions in seconds */
-  delay?: number;
+  delay?: number
   /** Number of particles to emit per frame */
-  emitCount?: number;
+  emitCount?: number
   /** Emitter shape type */
-  emitterShape?: (typeof EmitterShape)[keyof typeof EmitterShape];
+  emitterShape?: (typeof EmitterShape)[keyof typeof EmitterShape]
   /** Emitter radius [inner, outer] */
-  emitterRadius?: number | [number, number];
+  emitterRadius?: number | [number, number]
   /** Cone angle in radians */
-  emitterAngle?: number;
+  emitterAngle?: number
   /** Cone height [min, max] */
-  emitterHeight?: number | [number, number];
+  emitterHeight?: number | [number, number]
   /** Emit from surface only */
-  emitterSurfaceOnly?: boolean;
+  emitterSurfaceOnly?: boolean
   /** Direction for cone/disk normal */
-  emitterDirection?: [number, number, number];
+  emitterDirection?: [number, number, number]
   /** Turbulence settings */
-  turbulence?: TurbulenceConfig;
+  turbulence?: TurbulenceConfig
   /** Array of attractors (max 4) */
-  attractors?: AttractorConfig[] | null;
+  attractors?: AttractorConfig[] | null
   /** Particles move from spawn position to center over lifetime */
-  attractToCenter?: boolean;
+  attractToCenter?: boolean
   /** Use start position offset as direction */
-  startPositionAsDirection?: boolean;
+  startPositionAsDirection?: boolean
   /** Fade particles when intersecting scene geometry */
-  softParticles?: boolean;
+  softParticles?: boolean
   /** Distance over which to fade soft particles */
-  softDistance?: number;
+  softDistance?: number
   /** Plane collision settings */
-  collision?: CollisionConfig;
-};
+  collision?: CollisionConfig
+}

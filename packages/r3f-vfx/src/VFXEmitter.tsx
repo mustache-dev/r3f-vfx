@@ -134,7 +134,11 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
     ): [[number, number], [number, number], [number, number]] => {
       // Transform min and max direction vectors
       // dirRange format: [[minX, maxX], [minY, maxY], [minZ, maxZ]]
-      const minDir = _tempVec.set(dirRange[0][0], dirRange[1][0], dirRange[2][0])
+      const minDir = _tempVec.set(
+        dirRange[0][0],
+        dirRange[1][0],
+        dirRange[2][0]
+      )
       minDir.applyQuaternion(quat)
 
       const maxDir = new Vector3(dirRange[0][1], dirRange[1][1], dirRange[2][1])
@@ -177,7 +181,9 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
       const particles = getParticleSystem()
       if (!particles?.spawn) {
         if (name) {
-          console.warn(`VFXEmitter: No particle system found for name "${name}"`)
+          console.warn(
+            `VFXEmitter: No particle system found for name "${name}"`
+          )
         }
         return false
       }
@@ -272,7 +278,9 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
       const { position: emitPos, direction: emitDir } = getEmitParams()
       const [x, y, z] = emitPos
 
-      const finalOverrides = emitDir ? { ...overrides, direction: emitDir } : overrides
+      const finalOverrides = emitDir
+        ? { ...overrides, direction: emitDir }
+        : overrides
 
       particles.spawn(x, y, z, count ?? emitCount, finalOverrides)
 

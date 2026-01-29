@@ -13,8 +13,14 @@ export const evaluateBezierSegment = (
   // p0 = start point [x, y], p1 = end point [x, y]
   // h0Out = handle out from p0 (offset), h1In = handle in to p1 (offset)
   const cp0 = p0
-  const cp1: [number, number] = [p0[0] + (h0Out?.[0] || 0), p0[1] + (h0Out?.[1] || 0)]
-  const cp2: [number, number] = [p1[0] + (h1In?.[0] || 0), p1[1] + (h1In?.[1] || 0)]
+  const cp1: [number, number] = [
+    p0[0] + (h0Out?.[0] || 0),
+    p0[1] + (h0Out?.[1] || 0),
+  ]
+  const cp2: [number, number] = [
+    p1[0] + (h1In?.[0] || 0),
+    p1[1] + (h1In?.[1] || 0),
+  ]
   const cp3 = p1
 
   const mt = 1 - t
@@ -61,7 +67,13 @@ export const sampleCurveAtX = (x: number, points: CurvePoint[]): number => {
     tHigh = 1,
     t = 0.5
   for (let iter = 0; iter < 20; iter++) {
-    const [px] = evaluateBezierSegment(t, p0.pos, p1.pos, p0.handleOut, p1.handleIn)
+    const [px] = evaluateBezierSegment(
+      t,
+      p0.pos,
+      p1.pos,
+      p0.handleOut,
+      p1.handleIn
+    )
     if (Math.abs(px - x) < 0.0001) break
     if (px < x) {
       tLow = t
@@ -71,7 +83,13 @@ export const sampleCurveAtX = (x: number, points: CurvePoint[]): number => {
     t = (tLow + tHigh) / 2
   }
 
-  const [, py] = evaluateBezierSegment(t, p0.pos, p1.pos, p0.handleOut, p1.handleIn)
+  const [, py] = evaluateBezierSegment(
+    t,
+    p0.pos,
+    p1.pos,
+    p0.handleOut,
+    p1.handleIn
+  )
   // Allow values outside 0-1 for overshoot effects (elastic, bounce)
   // Clamp to reasonable range to prevent extreme values
   return Math.max(-0.5, Math.min(1.5, py))
@@ -85,7 +103,11 @@ export const bakeCurveToArray = (
   const data = new Float32Array(resolution)
 
   // Validate curve data structure
-  if (!curveData?.points || !Array.isArray(curveData.points) || curveData.points.length < 2) {
+  if (
+    !curveData?.points ||
+    !Array.isArray(curveData.points) ||
+    curveData.points.length < 2
+  ) {
     // Default linear curve: 1→0 (fade out over lifetime, matching default behavior)
     for (let i = 0; i < resolution; i++) {
       data[i] = 1 - i / (resolution - 1)
@@ -138,7 +160,13 @@ export const createCombinedCurveTexture = (
     rgba[i * 4 + 3] = rotationSpeedData[i] // A - rotation speed easing
   }
 
-  const tex = new THREE.DataTexture(rgba, CURVE_RESOLUTION, 1, THREE.RGBAFormat, THREE.FloatType)
+  const tex = new THREE.DataTexture(
+    rgba,
+    CURVE_RESOLUTION,
+    1,
+    THREE.RGBAFormat,
+    THREE.FloatType
+  )
   tex.minFilter = THREE.LinearFilter
   tex.magFilter = THREE.LinearFilter
   tex.wrapS = THREE.ClampToEdgeWrapping
@@ -150,8 +178,14 @@ export const createCombinedCurveTexture = (
 // Curve Y-value is the DIRECT multiplier: y=1 means full, y=0 means none
 export const DEFAULT_LINEAR_CURVE = {
   points: [
-    { pos: [0, 1] as [number, number], handleOut: [0.33, 0] as [number, number] },
-    { pos: [1, 0] as [number, number], handleIn: [-0.33, 0] as [number, number] },
+    {
+      pos: [0, 1] as [number, number],
+      handleOut: [0.33, 0] as [number, number],
+    },
+    {
+      pos: [1, 0] as [number, number],
+      handleIn: [-0.33, 0] as [number, number],
+    },
   ],
 }
 
@@ -165,7 +199,13 @@ export const createDefaultCurveTexture = (): THREE.DataTexture => {
     rgba[i * 4 + 2] = value // B - velocity
     rgba[i * 4 + 3] = value // A - rotation speed
   }
-  const tex = new THREE.DataTexture(rgba, CURVE_RESOLUTION, 1, THREE.RGBAFormat, THREE.FloatType)
+  const tex = new THREE.DataTexture(
+    rgba,
+    CURVE_RESOLUTION,
+    1,
+    THREE.RGBAFormat,
+    THREE.FloatType
+  )
   tex.minFilter = THREE.LinearFilter
   tex.magFilter = THREE.LinearFilter
   tex.wrapS = THREE.ClampToEdgeWrapping
@@ -200,7 +240,13 @@ export const loadCurveTextureFromPath = async (
   }
 
   // Create new texture
-  const tex = new THREE.DataTexture(rgba, CURVE_RESOLUTION, 1, THREE.RGBAFormat, THREE.FloatType)
+  const tex = new THREE.DataTexture(
+    rgba,
+    CURVE_RESOLUTION,
+    1,
+    THREE.RGBAFormat,
+    THREE.FloatType
+  )
   tex.minFilter = THREE.LinearFilter
   tex.magFilter = THREE.LinearFilter
   tex.wrapS = THREE.ClampToEdgeWrapping

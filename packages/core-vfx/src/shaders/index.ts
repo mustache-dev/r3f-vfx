@@ -4,15 +4,15 @@ export type {
   ParticleUniforms,
   MaterialOptions,
   ShaderFeatures,
-} from './types';
+} from './types'
 
 // Helper functions
-export { selectColor } from './helpers';
+export { selectColor } from './helpers'
 
 // Compute shader factories
-export { createInitCompute } from './init';
-export { createSpawnCompute } from './spawn';
-export { createUpdateCompute } from './update';
+export { createInitCompute } from './init'
+export { createSpawnCompute } from './spawn'
+export { createUpdateCompute } from './update'
 
 // Material factory
-export { createParticleMaterial } from './material';
+export { createParticleMaterial } from './material'

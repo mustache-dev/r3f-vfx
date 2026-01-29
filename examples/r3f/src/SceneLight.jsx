@@ -1,4 +1,4 @@
-import { Environment } from '@react-three/drei';
+import { Environment } from '@react-three/drei'
 
 export default function SceneLight() {
   return (
@@ -20,5 +20,5 @@ export default function SceneLight() {
       <ambientLight intensity={0.3} />
       <Environment preset="sunset" background backgroundBlurriness={1} />
     </>
-  );
+  )
 }

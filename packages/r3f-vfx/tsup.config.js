@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from 'tsup'
 
 export default defineConfig({
   entry: ['src/index.ts', 'src/curveWorker.js'],
@@ -10,6 +10,6 @@ export default defineConfig({
     options.loader = {
       ...options.loader,
       '.js': 'jsx',
-    };
+    }
   },
-});
+})

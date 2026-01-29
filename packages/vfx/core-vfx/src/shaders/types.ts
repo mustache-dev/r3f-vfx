@@ -23,10 +23,10 @@ export type ParticleUniforms = Record<string, Node>
 // Feature flags for conditional shader generation
 // When a feature is disabled, its uniforms and shader code are skipped entirely
 export type ShaderFeatures = {
-  turbulence: boolean    // Curl noise turbulence
-  attractors: boolean    // Point/vortex attractors (up to 4)
-  collision: boolean     // Plane collision with bounce/die
-  rotation: boolean      // Per-particle rotation and rotation speed
+  turbulence: boolean // Curl noise turbulence
+  attractors: boolean // Point/vortex attractors (up to 4)
+  collision: boolean // Plane collision with bounce/die
+  rotation: boolean // Per-particle rotation and rotation speed
   perParticleColor: boolean // Per-particle color arrays (vs single uniform color)
 }
 
@@ -43,7 +43,10 @@ export type MaterialOptions = {
   blending: THREE.Blending
   // Custom nodes
   opacityNode: Node | ((data: Record<string, Node>) => Node) | null
-  colorNode: Node | ((data: Record<string, Node>, defaultColor: Node) => Node) | null
+  colorNode:
+    | Node
+    | ((data: Record<string, Node>, defaultColor: Node) => Node)
+    | null
   backdropNode: Node | ((data: Record<string, Node>) => Node) | null
   alphaTestNode: Node | ((data: Record<string, Node>) => Node) | null
   castShadowNode: Node | ((data: Record<string, Node>) => Node) | null

@@ -1,35 +1,35 @@
-import { useRef, useEffect } from 'react';
-import * as THREE from 'three/webgpu';
+import { useRef, useEffect } from 'react'
+import * as THREE from 'three/webgpu'
 import {
   createDefaultCurveTexture,
   loadCurveTextureFromPath,
   CURVE_RESOLUTION,
   type CurveData,
-} from 'core-vfx';
+} from 'core-vfx'
 // Singleton worker for curve baking (shared across all VFXParticles instances)
-let curveWorker: Worker | null = null;
-let curveWorkerCallbacks = new Map<number, (rgba: Float32Array) => void>();
-let curveWorkerIdCounter = 0;
+let curveWorker: Worker | null = null
+let curveWorkerCallbacks = new Map<number, (rgba: Float32Array) => void>()
+let curveWorkerIdCounter = 0
 
 const getCurveWorker = (): Worker => {
   if (!curveWorker) {
     // Use new Worker with URL constructor - works with both Vite and bundlers
     curveWorker = new Worker(new URL('./curveWorker.js', import.meta.url), {
       type: 'module',
-    });
+    })
     curveWorker.onmessage = (
       e: MessageEvent<{ id: number; rgba: Float32Array }>
     ) => {
-      const { id, rgba } = e.data;
-      const callback = curveWorkerCallbacks.get(id);
+      const { id, rgba } = e.data
+      const callback = curveWorkerCallbacks.get(id)
       if (callback) {
-        callback(rgba);
-        curveWorkerCallbacks.delete(id);
+        callback(rgba)
+        curveWorkerCallbacks.delete(id)
       }
-    };
+    }
   }
-  return curveWorker!;
-};
+  return curveWorker!
+}
 
 // Request curve baking from worker, returns a promise
 const bakeCurvesAsync = (
@@ -39,18 +39,18 @@ const bakeCurvesAsync = (
   rotationSpeedCurve: CurveData | null
 ): Promise<Float32Array> => {
   return new Promise((resolve) => {
-    const worker = getCurveWorker();
-    const id = curveWorkerIdCounter++;
-    curveWorkerCallbacks.set(id, resolve);
+    const worker = getCurveWorker()
+    const id = curveWorkerIdCounter++
+    curveWorkerCallbacks.set(id, resolve)
     worker.postMessage({
       id,
       sizeCurve,
       opacityCurve,
       velocityCurve,
       rotationSpeedCurve,
-    });
-  });
-};
+    })
+  })
+}
 
 /**
  * Hook for async curve texture loading
@@ -70,22 +70,22 @@ export const useCurveTextureAsync = (
   rotationSpeedCurve: CurveData | null,
   curveTexturePath: string | null = null
 ): THREE.DataTexture => {
-  const textureRef = useRef<THREE.DataTexture | null>(null);
-  const pendingRef = useRef<object | null>(null);
+  const textureRef = useRef<THREE.DataTexture | null>(null)
+  const pendingRef = useRef<object | null>(null)
 
   // Create default texture once (4KB, instant, has correct linear 1→0 fallback)
   if (!textureRef.current) {
-    textureRef.current = createDefaultCurveTexture();
+    textureRef.current = createDefaultCurveTexture()
   }
 
   useEffect(() => {
-    const requestId = {};
-    pendingRef.current = requestId;
+    const requestId = {}
+    pendingRef.current = requestId
 
     // Skip baking entirely if no curves are defined and no texture path
     // The default texture already has correct linear 1→0 fallback values
     const hasAnyCurve =
-      sizeCurve || opacityCurve || velocityCurve || rotationSpeedCurve;
+      sizeCurve || opacityCurve || velocityCurve || rotationSpeedCurve
 
     if (curveTexturePath) {
       // Load pre-baked texture from .bin file (fast path, full float precision)
@@ -94,7 +94,7 @@ export const useCurveTextureAsync = (
           console.warn(
             `Failed to load curve texture: ${curveTexturePath}, falling back to baking`,
             err
-          );
+          )
           // Fallback to baking if load fails
           return bakeCurvesAsync(
             sizeCurve,
@@ -106,12 +106,12 @@ export const useCurveTextureAsync = (
               pendingRef.current === requestId &&
               textureRef.current?.image.data
             ) {
-              textureRef.current.image.data.set(rgba);
-              textureRef.current.needsUpdate = true;
+              textureRef.current.image.data.set(rgba)
+              textureRef.current.needsUpdate = true
             }
-          });
+          })
         }
-      );
+      )
     } else if (hasAnyCurve) {
       // Only bake if at least one curve is defined
       bakeCurvesAsync(
@@ -124,33 +124,33 @@ export const useCurveTextureAsync = (
           pendingRef.current === requestId &&
           textureRef.current?.image.data
         ) {
-          textureRef.current.image.data.set(rgba);
-          textureRef.current.needsUpdate = true;
+          textureRef.current.image.data.set(rgba)
+          textureRef.current.needsUpdate = true
         }
-      });
+      })
     }
     // else: no curves, no texture path → use default texture as-is (no baking needed)
 
     return () => {
-      pendingRef.current = null;
-    };
+      pendingRef.current = null
+    }
   }, [
     sizeCurve,
     opacityCurve,
     velocityCurve,
     rotationSpeedCurve,
     curveTexturePath,
-  ]);
+  ])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      textureRef.current?.dispose();
-      textureRef.current = null;
-    };
-  }, []);
+      textureRef.current?.dispose()
+      textureRef.current = null
+    }
+  }, [])
 
-  return textureRef.current!;
-};
+  return textureRef.current!
+}
 
-export default useCurveTextureAsync;
+export default useCurveTextureAsync

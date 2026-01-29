@@ -1,1 +1,1 @@
-console.log('vanilla-vfx');
+console.log('vanilla-vfx')

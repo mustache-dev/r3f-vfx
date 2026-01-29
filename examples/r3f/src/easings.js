@@ -1,153 +1,153 @@
-import { float, sin, cos, pow, sqrt, PI } from 'three/tsl';
+import { float, sin, cos, pow, sqrt, PI } from 'three/tsl'
 
 // ============== LINEAR ==============
-export const easeLinear = (t) => t;
+export const easeLinear = (t) => t
 
 // ============== POWER 1 ==============
-export const easeInPower1 = (t) => t;
-export const easeOutPower1 = (t) => float(1).sub(float(1).sub(t));
-export const easeInOutPower1 = (t) => t;
+export const easeInPower1 = (t) => t
+export const easeOutPower1 = (t) => float(1).sub(float(1).sub(t))
+export const easeInOutPower1 = (t) => t
 
 // ============== POWER 2 ==============
-export const easeInPower2 = (t) => t.mul(t);
-export const easeOutPower2 = (t) => float(1).sub(pow(float(1).sub(t), 2));
+export const easeInPower2 = (t) => t.mul(t)
+export const easeOutPower2 = (t) => float(1).sub(pow(float(1).sub(t), 2))
 export const easeInOutPower2 = (t) =>
   t
     .lessThan(0.5)
     .select(
       float(2).mul(t).mul(t),
       float(1).sub(pow(float(-2).mul(t).add(2), 2).div(2))
-    );
+    )
 
 // ============== POWER 3 ==============
-export const easeInPower3 = (t) => t.mul(t).mul(t);
-export const easeOutPower3 = (t) => float(1).sub(pow(float(1).sub(t), 3));
+export const easeInPower3 = (t) => t.mul(t).mul(t)
+export const easeOutPower3 = (t) => float(1).sub(pow(float(1).sub(t), 3))
 export const easeInOutPower3 = (t) =>
   t
     .lessThan(0.5)
     .select(
       float(4).mul(t).mul(t).mul(t),
       float(1).sub(pow(float(-2).mul(t).add(2), 3).div(2))
-    );
+    )
 
 // ============== POWER 4 ==============
-export const easeInPower4 = (t) => t.mul(t).mul(t).mul(t);
-export const easeOutPower4 = (t) => float(1).sub(pow(float(1).sub(t), 4));
+export const easeInPower4 = (t) => t.mul(t).mul(t).mul(t)
+export const easeOutPower4 = (t) => float(1).sub(pow(float(1).sub(t), 4))
 export const easeInOutPower4 = (t) =>
   t
     .lessThan(0.5)
     .select(
       float(8).mul(t).mul(t).mul(t).mul(t),
       float(1).sub(pow(float(-2).mul(t).add(2), 4).div(2))
-    );
+    )
 
 // ============== QUAD ==============
-export const easeInQuad = (t) => t.mul(t);
-export const easeOutQuad = (t) => t.mul(float(2).sub(t));
+export const easeInQuad = (t) => t.mul(t)
+export const easeOutQuad = (t) => t.mul(float(2).sub(t))
 export const easeInOutQuad = (t) =>
   t
     .lessThan(0.5)
     .select(
       float(2).mul(t).mul(t),
       float(-1).add(float(4).sub(float(2).mul(t)).mul(t))
-    );
+    )
 
 // ============== CUBIC ==============
-export const easeInCubic = (t) => t.mul(t).mul(t);
+export const easeInCubic = (t) => t.mul(t).mul(t)
 export const easeOutCubic = (t) => {
-  const t1 = t.sub(1);
-  return float(1).add(t1.mul(t1).mul(t1));
-};
+  const t1 = t.sub(1)
+  return float(1).add(t1.mul(t1).mul(t1))
+}
 export const easeInOutCubic = (t) => {
-  const t1 = t.sub(1);
-  const t2 = float(2).mul(t).sub(2);
+  const t1 = t.sub(1)
+  const t2 = float(2).mul(t).sub(2)
   return t
     .lessThan(0.5)
-    .select(float(4).mul(t).mul(t).mul(t), t1.mul(t2).mul(t2).add(1));
-};
+    .select(float(4).mul(t).mul(t).mul(t), t1.mul(t2).mul(t2).add(1))
+}
 
 // ============== QUART ==============
-export const easeInQuart = (t) => t.mul(t).mul(t).mul(t);
+export const easeInQuart = (t) => t.mul(t).mul(t).mul(t)
 export const easeOutQuart = (t) => {
-  const t1 = t.sub(1);
-  return float(1).sub(t1.mul(t1).mul(t1).mul(t1));
-};
+  const t1 = t.sub(1)
+  return float(1).sub(t1.mul(t1).mul(t1).mul(t1))
+}
 export const easeInOutQuart = (t) => {
-  const t1 = t.sub(1);
+  const t1 = t.sub(1)
   return t
     .lessThan(0.5)
     .select(
       float(8).mul(t).mul(t).mul(t).mul(t),
       float(1).sub(float(8).mul(t1).mul(t1).mul(t1).mul(t1))
-    );
-};
+    )
+}
 
 // ============== QUINT ==============
-export const easeInQuint = (t) => t.mul(t).mul(t).mul(t).mul(t);
+export const easeInQuint = (t) => t.mul(t).mul(t).mul(t).mul(t)
 export const easeOutQuint = (t) => {
-  const t1 = t.sub(1);
-  return float(1).add(t1.mul(t1).mul(t1).mul(t1).mul(t1));
-};
+  const t1 = t.sub(1)
+  return float(1).add(t1.mul(t1).mul(t1).mul(t1).mul(t1))
+}
 export const easeInOutQuint = (t) => {
-  const t1 = t.sub(1);
+  const t1 = t.sub(1)
   return t
     .lessThan(0.5)
     .select(
       float(16).mul(t).mul(t).mul(t).mul(t).mul(t),
       float(1).add(float(16).mul(t1).mul(t1).mul(t1).mul(t1).mul(t1))
-    );
-};
+    )
+}
 
 // ============== SINE ==============
-export const easeInSine = (t) => float(1).sub(cos(t.mul(PI).mul(0.5)));
-export const easeOutSine = (t) => sin(t.mul(PI).mul(0.5));
-export const easeInOutSine = (t) => float(-0.5).mul(cos(PI.mul(t)).sub(1));
+export const easeInSine = (t) => float(1).sub(cos(t.mul(PI).mul(0.5)))
+export const easeOutSine = (t) => sin(t.mul(PI).mul(0.5))
+export const easeInOutSine = (t) => float(-0.5).mul(cos(PI.mul(t)).sub(1))
 
 // ============== EXPO ==============
 export const easeInExpo = (t) =>
-  t.equal(0).select(float(0), pow(2, float(10).mul(t.sub(1))));
+  t.equal(0).select(float(0), pow(2, float(10).mul(t.sub(1))))
 export const easeOutExpo = (t) =>
-  t.equal(1).select(float(1), float(1).sub(pow(2, float(-10).mul(t))));
+  t.equal(1).select(float(1), float(1).sub(pow(2, float(-10).mul(t))))
 export const easeInOutExpo = (t) =>
   t
     .lessThan(0.5)
     .select(
       float(0.5).mul(pow(2, float(20).mul(t).sub(10))),
       float(0.5).mul(float(2).sub(pow(2, float(-20).mul(t).add(10))))
-    );
+    )
 
 // ============== CIRC ==============
-export const easeInCirc = (t) => float(1).sub(sqrt(float(1).sub(t.mul(t))));
+export const easeInCirc = (t) => float(1).sub(sqrt(float(1).sub(t.mul(t))))
 export const easeOutCirc = (t) => {
-  const t1 = t.sub(1);
-  return sqrt(float(1).sub(t1.mul(t1)));
-};
+  const t1 = t.sub(1)
+  return sqrt(float(1).sub(t1.mul(t1)))
+}
 export const easeInOutCirc = (t) => {
-  const t1 = float(2).mul(t);
-  const t2 = t1.sub(2);
+  const t1 = float(2).mul(t)
+  const t2 = t1.sub(2)
   return t
     .lessThan(0.5)
     .select(
       float(-0.5).mul(sqrt(float(1).sub(t1.mul(t1))).sub(1)),
       float(0.5).mul(sqrt(float(1).sub(t2.mul(t2))).add(1))
-    );
-};
+    )
+}
 
 // ============== ELASTIC ==============
 export const easeInElastic = (t) => {
-  const period = float(0.3);
+  const period = float(0.3)
   return float(-1)
     .mul(pow(2, float(10).mul(t.sub(1))))
-    .mul(sin(t.sub(1.075).mul(float(2).mul(PI)).div(period)));
-};
+    .mul(sin(t.sub(1.075).mul(float(2).mul(PI)).div(period)))
+}
 export const easeOutElastic = (t) => {
-  const period = float(0.3);
+  const period = float(0.3)
   return pow(2, float(-10).mul(t))
     .mul(sin(t.sub(0.075).mul(float(2).mul(PI)).div(period)))
-    .add(1);
-};
+    .add(1)
+}
 export const easeInOutElastic = (t) => {
-  const period = float(4.5);
+  const period = float(4.5)
   return t.lessThan(0.5).select(
     float(-0.5)
       .mul(pow(2, float(20).mul(t).sub(10)))
@@ -156,23 +156,23 @@ export const easeInOutElastic = (t) => {
       .mul(sin(float(20).mul(t).sub(11.125).mul(float(2).mul(PI)).div(period)))
       .mul(0.5)
       .add(1)
-  );
-};
+  )
+}
 
 // ============== BACK ==============
 export const easeInBack = (t) => {
-  const s = float(1.70158);
-  return t.mul(t).mul(s.add(1).mul(t).sub(s));
-};
+  const s = float(1.70158)
+  return t.mul(t).mul(s.add(1).mul(t).sub(s))
+}
 export const easeOutBack = (t) => {
-  const s = float(1.70158);
-  const t1 = t.sub(1);
-  return t1.mul(t1).mul(s.add(1).mul(t1).add(s)).add(1);
-};
+  const s = float(1.70158)
+  const t1 = t.sub(1)
+  return t1.mul(t1).mul(s.add(1).mul(t1).add(s)).add(1)
+}
 export const easeInOutBack = (t) => {
-  const s = float(1.70158 * 1.525);
-  const t2 = t.mul(2);
-  const t2minus2 = t2.sub(2);
+  const s = float(1.70158 * 1.525)
+  const t2 = t.mul(2)
+  const t2minus2 = t2.sub(2)
   return t
     .lessThan(0.5)
     .select(
@@ -180,13 +180,13 @@ export const easeInOutBack = (t) => {
       float(0.5).mul(
         t2minus2.mul(t2minus2).mul(s.add(1).mul(t2minus2).add(s)).add(2)
       )
-    );
-};
+    )
+}
 
 // ============== BOUNCE ==============
 export const easeOutBounce = (t) => {
-  const n1 = float(7.5625);
-  const d1 = float(2.75);
+  const n1 = float(7.5625)
+  const d1 = float(2.75)
 
   return t.lessThan(float(1).div(d1)).select(
     n1.mul(t).mul(t),
@@ -206,10 +206,10 @@ export const easeOutBounce = (t) => {
           .add(0.984375)
       )
     )
-  );
-};
+  )
+}
 
-export const easeInBounce = (t) => float(1).sub(easeOutBounce(float(1).sub(t)));
+export const easeInBounce = (t) => float(1).sub(easeOutBounce(float(1).sub(t)))
 
 export const easeInOutBounce = (t) =>
   t.lessThan(0.5).select(
@@ -219,7 +219,7 @@ export const easeInOutBounce = (t) =>
     float(1)
       .add(easeOutBounce(float(2).mul(t).sub(1)))
       .mul(0.5)
-  );
+  )
 
 // ============== EASING ENUM ==============
 export const Easing = Object.freeze({
@@ -254,7 +254,7 @@ export const Easing = Object.freeze({
   IN_BOUNCE: 'inBounce',
   OUT_BOUNCE: 'outBounce',
   IN_OUT_BOUNCE: 'inOutBounce',
-});
+})
 
 // Helper to get easing function by name
 export const getEasing = (name) => {
@@ -299,6 +299,6 @@ export const getEasing = (name) => {
     inPower4: easeInPower4,
     outPower4: easeOutPower4,
     inOutPower4: easeInOutPower4,
-  };
-  return easings[name] || easeLinear;
-};
+  }
+  return easings[name] || easeLinear
+}

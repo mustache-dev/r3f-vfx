@@ -55,7 +55,13 @@ const sampleCurveAtX = (x, points) => {
   let t = 0.5
 
   for (let iter = 0; iter < 20; iter++) {
-    const [px] = evaluateBezierSegment(t, p0.pos, p1.pos, p0.handleOut, p1.handleIn)
+    const [px] = evaluateBezierSegment(
+      t,
+      p0.pos,
+      p1.pos,
+      p0.handleOut,
+      p1.handleIn
+    )
     if (Math.abs(px - x) < 0.0001) break
     if (px < x) {
       tLow = t
@@ -65,7 +71,13 @@ const sampleCurveAtX = (x, points) => {
     t = (tLow + tHigh) / 2
   }
 
-  const [, py] = evaluateBezierSegment(t, p0.pos, p1.pos, p0.handleOut, p1.handleIn)
+  const [, py] = evaluateBezierSegment(
+    t,
+    p0.pos,
+    p1.pos,
+    p0.handleOut,
+    p1.handleIn
+  )
   // Allow values outside 0-1 for overshoot effects (elastic, bounce)
   return Math.max(-0.5, Math.min(1.5, py))
 }
@@ -74,7 +86,11 @@ const sampleCurveAtX = (x, points) => {
 const bakeCurveToArray = (curveData) => {
   const data = new Float32Array(CURVE_RESOLUTION)
 
-  if (!curveData?.points || !Array.isArray(curveData.points) || curveData.points.length < 2) {
+  if (
+    !curveData?.points ||
+    !Array.isArray(curveData.points) ||
+    curveData.points.length < 2
+  ) {
     // Default linear curve: 1→0 (fade out over lifetime)
     for (let i = 0; i < CURVE_RESOLUTION; i++) {
       data[i] = 1 - i / (CURVE_RESOLUTION - 1)
@@ -107,7 +123,12 @@ const bakeCurveToArray = (curveData) => {
 }
 
 // Bake all 4 curves and combine into RGBA texture data
-const bakeCombinedCurves = (sizeCurve, opacityCurve, velocityCurve, rotationSpeedCurve) => {
+const bakeCombinedCurves = (
+  sizeCurve,
+  opacityCurve,
+  velocityCurve,
+  rotationSpeedCurve
+) => {
   const sizeData = bakeCurveToArray(sizeCurve)
   const opacityData = bakeCurveToArray(opacityCurve)
   const velocityData = bakeCurveToArray(velocityCurve)
@@ -126,9 +147,15 @@ const bakeCombinedCurves = (sizeCurve, opacityCurve, velocityCurve, rotationSpee
 
 // Handle messages from main thread
 self.onmessage = (e) => {
-  const { id, sizeCurve, opacityCurve, velocityCurve, rotationSpeedCurve } = e.data
+  const { id, sizeCurve, opacityCurve, velocityCurve, rotationSpeedCurve } =
+    e.data
 
-  const rgba = bakeCombinedCurves(sizeCurve, opacityCurve, velocityCurve, rotationSpeedCurve)
+  const rgba = bakeCombinedCurves(
+    sizeCurve,
+    opacityCurve,
+    velocityCurve,
+    rotationSpeedCurve
+  )
 
   // Transfer the buffer back (zero-copy)
   self.postMessage({ id, rgba }, [rgba.buffer])

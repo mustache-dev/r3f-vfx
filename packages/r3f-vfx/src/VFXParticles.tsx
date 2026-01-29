@@ -6,12 +6,12 @@ import {
   useMemo,
   useCallback,
   useState,
-} from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import * as THREE from 'three/webgpu';
-import { useVFXStore } from './react-store';
-import { useCurveTextureAsync } from './useCurveTextureAsync';
-import { uniform, instancedArray } from 'three/tsl';
+} from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import * as THREE from 'three/webgpu'
+import { useVFXStore } from './react-store'
+import { useCurveTextureAsync } from './useCurveTextureAsync'
+import { uniform, instancedArray } from 'three/tsl'
 import {
   Appearance,
   Blending,
@@ -35,7 +35,7 @@ import {
   type Rotation3DInput,
   type ParticleData,
   type ParticleStorageArrays,
-} from 'core-vfx';
+} from 'core-vfx'
 
 // Re-export constants and utilities for backwards compatibility
 export {
@@ -47,139 +47,139 @@ export {
   Lighting,
   bakeCurveToArray,
   createCombinedCurveTexture,
-} from 'core-vfx';
+} from 'core-vfx'
 
 export type VFXParticlesProps = {
   /** Optional name for registering with useVFXStore (enables VFXEmitter linking) */
-  name?: string;
+  name?: string
   /** Maximum number of particles */
-  maxParticles?: number;
+  maxParticles?: number
   /** Particle size [min, max] or single value */
-  size?: number | [number, number];
+  size?: number | [number, number]
   /** Array of hex color strings for start color */
-  colorStart?: string[];
+  colorStart?: string[]
   /** Array of hex color strings for end color (null = use colorStart) */
-  colorEnd?: string[] | null;
+  colorEnd?: string[] | null
   /** Fade size [start, end] multiplier over lifetime */
-  fadeSize?: number | [number, number];
+  fadeSize?: number | [number, number]
   /** Curve data for size over lifetime */
-  fadeSizeCurve?: CurveData;
+  fadeSizeCurve?: CurveData
   /** Fade opacity [start, end] multiplier over lifetime */
-  fadeOpacity?: number | [number, number];
+  fadeOpacity?: number | [number, number]
   /** Curve data for opacity over lifetime */
-  fadeOpacityCurve?: CurveData;
+  fadeOpacityCurve?: CurveData
   /** Curve data for velocity over lifetime */
-  velocityCurve?: CurveData;
+  velocityCurve?: CurveData
   /** Gravity vector [x, y, z] */
-  gravity?: [number, number, number];
+  gravity?: [number, number, number]
   /** Particle lifetime in seconds [min, max] or single value */
-  lifetime?: number | [number, number];
+  lifetime?: number | [number, number]
   /** Direction ranges for velocity */
-  direction?: Rotation3DInput;
+  direction?: Rotation3DInput
   /** Start position offset ranges */
-  startPosition?: Rotation3DInput;
+  startPosition?: Rotation3DInput
   /** Speed [min, max] or single value */
-  speed?: number | [number, number];
+  speed?: number | [number, number]
   /** Friction settings */
-  friction?: { intensity?: number | [number, number]; easing?: string };
+  friction?: { intensity?: number | [number, number]; easing?: string }
   /** Particle appearance type */
-  appearance?: (typeof Appearance)[keyof typeof Appearance];
+  appearance?: (typeof Appearance)[keyof typeof Appearance]
   /** Alpha map texture */
-  alphaMap?: THREE.Texture | null;
+  alphaMap?: THREE.Texture | null
   /** Flipbook animation settings */
-  flipbook?: { rows: number; columns: number } | null;
+  flipbook?: { rows: number; columns: number } | null
   /** Rotation [min, max] in radians or 3D rotation ranges */
-  rotation?: Rotation3DInput;
+  rotation?: Rotation3DInput
   /** Rotation speed [min, max] in radians/second or 3D ranges */
-  rotationSpeed?: Rotation3DInput;
+  rotationSpeed?: Rotation3DInput
   /** Curve data for rotation speed over lifetime */
-  rotationSpeedCurve?: CurveData;
+  rotationSpeedCurve?: CurveData
   /** Custom geometry for 3D particles */
-  geometry?: THREE.BufferGeometry | null;
+  geometry?: THREE.BufferGeometry | null
   /** Rotate geometry to face velocity direction */
-  orientToDirection?: boolean;
+  orientToDirection?: boolean
   /** Which local axis aligns with velocity */
-  orientAxis?: string;
+  orientAxis?: string
   /** Stretch particles based on speed */
-  stretchBySpeed?: { factor: number; maxStretch: number } | null;
+  stretchBySpeed?: { factor: number; maxStretch: number } | null
   /** Material lighting type for geometry mode */
-  lighting?: (typeof Lighting)[keyof typeof Lighting];
+  lighting?: (typeof Lighting)[keyof typeof Lighting]
   /** Enable shadows on geometry instances */
-  shadow?: boolean;
+  shadow?: boolean
   /** Blending mode */
-  blending?: THREE.Blending;
+  blending?: THREE.Blending
   /** Color intensity multiplier */
-  intensity?: number;
+  intensity?: number
   /** Emitter position [x, y, z] */
-  position?: [number, number, number];
+  position?: [number, number, number]
   /** Start emitting automatically */
-  autoStart?: boolean;
+  autoStart?: boolean
   /** Delay between emissions in seconds */
-  delay?: number;
+  delay?: number
   /** TSL node or function for backdrop sampling */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  backdropNode?: any | ((data: ParticleData) => any) | null;
+  backdropNode?: any | ((data: ParticleData) => any) | null
   /** TSL node or function for custom opacity */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opacityNode?: any | ((data: ParticleData) => any) | null;
+  opacityNode?: any | ((data: ParticleData) => any) | null
   /** TSL node or function to override color */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  colorNode?: any | ((data: ParticleData, defaultColor: any) => any) | null;
+  colorNode?: any | ((data: ParticleData, defaultColor: any) => any) | null
   /** TSL node or function for alpha test/discard */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  alphaTestNode?: any | ((data: ParticleData) => any) | null;
+  alphaTestNode?: any | ((data: ParticleData) => any) | null
   /** TSL node or function for shadow map output */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  castShadowNode?: any | ((data: ParticleData) => any) | null;
+  castShadowNode?: any | ((data: ParticleData) => any) | null
   /** Number of particles to emit per frame */
-  emitCount?: number;
+  emitCount?: number
   /** Emitter shape type */
-  emitterShape?: (typeof EmitterShape)[keyof typeof EmitterShape];
+  emitterShape?: (typeof EmitterShape)[keyof typeof EmitterShape]
   /** Emitter radius [inner, outer] */
-  emitterRadius?: number | [number, number];
+  emitterRadius?: number | [number, number]
   /** Cone angle in radians */
-  emitterAngle?: number;
+  emitterAngle?: number
   /** Cone height [min, max] */
-  emitterHeight?: number | [number, number];
+  emitterHeight?: number | [number, number]
   /** Emit from surface only */
-  emitterSurfaceOnly?: boolean;
+  emitterSurfaceOnly?: boolean
   /** Direction for cone/disk normal */
-  emitterDirection?: [number, number, number];
+  emitterDirection?: [number, number, number]
   /** Turbulence settings */
-  turbulence?: { intensity: number; frequency?: number; speed?: number } | null;
+  turbulence?: { intensity: number; frequency?: number; speed?: number } | null
   /** Array of attractors (max 4) */
   attractors?: Array<{
-    position?: [number, number, number];
-    strength?: number;
-    radius?: number;
-    type?: 'point' | 'vortex';
-    axis?: [number, number, number];
-  }> | null;
+    position?: [number, number, number]
+    strength?: number
+    radius?: number
+    type?: 'point' | 'vortex'
+    axis?: [number, number, number]
+  }> | null
   /** Particles move from spawn position to center over lifetime */
-  attractToCenter?: boolean;
+  attractToCenter?: boolean
   /** Use start position offset as direction */
-  startPositionAsDirection?: boolean;
+  startPositionAsDirection?: boolean
   /** Fade particles when intersecting scene geometry */
-  softParticles?: boolean;
+  softParticles?: boolean
   /** Distance over which to fade soft particles */
-  softDistance?: number;
+  softDistance?: number
   /** Plane collision settings */
   collision?: {
-    plane?: { y: number };
-    bounce?: number;
-    friction?: number;
-    die?: boolean;
-    sizeBasedGravity?: number;
-  } | null;
+    plane?: { y: number }
+    bounce?: number
+    friction?: number
+    die?: boolean
+    sizeBasedGravity?: number
+  } | null
   /** Show debug control panel */
-  debug?: boolean;
+  debug?: boolean
   /** Path to pre-baked curve texture (skips runtime baking for faster load) */
-  curveTexturePath?: string | null;
+  curveTexturePath?: string | null
   /** Depth test */
-  depthTest?: boolean;
+  depthTest?: boolean
   /** Render order (higher values render on top) */
-  renderOrder?: number;
-};
+  renderOrder?: number
+}
 
 export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
   function VFXParticles(
@@ -266,95 +266,95 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
     },
     ref
   ) {
-    const { gl: renderer } = useThree();
-    const spriteRef = useRef<THREE.Sprite | THREE.InstancedMesh | null>(null);
-    const initialized = useRef(false);
-    const nextIndex = useRef(0);
-    const [emitting, setEmitting] = useState(autoStart);
-    const emitAccumulator = useRef(0);
+    const { gl: renderer } = useThree()
+    const spriteRef = useRef<THREE.Sprite | THREE.InstancedMesh | null>(null)
+    const initialized = useRef(false)
+    const nextIndex = useRef(0)
+    const [emitting, setEmitting] = useState(autoStart)
+    const emitAccumulator = useRef(0)
 
     // Refs for runtime values that can be updated by debug panel
-    const delayRef = useRef(delay);
-    const emitCountRef = useRef(emitCount);
-    const turbulenceRef = useRef(turbulence);
+    const delayRef = useRef(delay)
+    const emitCountRef = useRef(emitCount)
+    const turbulenceRef = useRef(turbulence)
 
     // State for "remount-required" values - changing these recreates GPU resources
-    const [activeMaxParticles, setActiveMaxParticles] = useState(maxParticles);
-    const [activeLighting, setActiveLighting] = useState(lighting);
-    const [activeAppearance, setActiveAppearance] = useState(appearance);
+    const [activeMaxParticles, setActiveMaxParticles] = useState(maxParticles)
+    const [activeLighting, setActiveLighting] = useState(lighting)
+    const [activeAppearance, setActiveAppearance] = useState(appearance)
     const [activeOrientToDirection, setActiveOrientToDirection] =
-      useState(orientToDirection);
-    const [activeGeometry, setActiveGeometry] = useState(geometry);
-    const [activeShadow, setActiveShadow] = useState(shadow);
+      useState(orientToDirection)
+    const [activeGeometry, setActiveGeometry] = useState(geometry)
+    const [activeShadow, setActiveShadow] = useState(shadow)
     const [activeFadeSizeCurve, setActiveFadeSizeCurve] =
-      useState(fadeSizeCurve);
+      useState(fadeSizeCurve)
     const [activeFadeOpacityCurve, setActiveFadeOpacityCurve] =
-      useState(fadeOpacityCurve);
+      useState(fadeOpacityCurve)
     const [activeVelocityCurve, setActiveVelocityCurve] =
-      useState(velocityCurve);
+      useState(velocityCurve)
     const [activeRotationSpeedCurve, setActiveRotationSpeedCurve] =
-      useState(rotationSpeedCurve);
+      useState(rotationSpeedCurve)
     // Shader features that require recompilation when toggled (e.g. from debug panel)
     const [activeTurbulence, setActiveTurbulence] = useState(
       turbulence !== null && (turbulence?.intensity ?? 0) > 0
-    );
+    )
     const [activeAttractors, setActiveAttractors] = useState(
       attractors !== null && attractors.length > 0
-    );
-    const [activeCollision, setActiveCollision] = useState(collision !== null);
+    )
+    const [activeCollision, setActiveCollision] = useState(collision !== null)
     // Per-particle color arrays needed if: multiple start colors OR color transition
     const [activeNeedsPerParticleColor, setActiveNeedsPerParticleColor] =
-      useState(colorStart.length > 1 || colorEnd !== null);
+      useState(colorStart.length > 1 || colorEnd !== null)
     // Rotation array needed if rotation or rotationSpeed is non-default
     // Default rotation = [0,0] or [[0,0],[0,0],[0,0]], default rotationSpeed = [0,0] or [[0,0],[0,0],[0,0]]
     const isNonDefaultRotation = (r: Rotation3DInput) => {
-      if (typeof r === 'number') return r !== 0;
+      if (typeof r === 'number') return r !== 0
       if (Array.isArray(r) && r.length === 2 && typeof r[0] === 'number') {
-        return r[0] !== 0 || r[1] !== 0;
+        return r[0] !== 0 || r[1] !== 0
       }
       // 3D format [[minX, maxX], [minY, maxY], [minZ, maxZ]]
       if (Array.isArray(r)) {
         return r.some(
           (axis) => Array.isArray(axis) && (axis[0] !== 0 || axis[1] !== 0)
-        );
+        )
       }
-      return false;
-    };
+      return false
+    }
     const [activeNeedsRotation, setActiveNeedsRotation] = useState(
       isNonDefaultRotation(rotation) || isNonDefaultRotation(rotationSpeed)
-    );
+    )
 
     // Keep refs in sync with props (when not in debug mode)
     useEffect(() => {
-      delayRef.current = delay;
-      emitCountRef.current = emitCount;
-      turbulenceRef.current = turbulence;
-    }, [delay, emitCount, turbulence]);
+      delayRef.current = delay
+      emitCountRef.current = emitCount
+      turbulenceRef.current = turbulence
+    }, [delay, emitCount, turbulence])
 
     // Keep remount-required state in sync with props (when not in debug mode)
     useEffect(() => {
       if (!debug) {
-        setActiveMaxParticles(maxParticles);
-        setActiveLighting(lighting);
-        setActiveAppearance(appearance);
-        setActiveOrientToDirection(orientToDirection);
-        setActiveGeometry(geometry);
-        setActiveShadow(shadow);
-        setActiveFadeSizeCurve(fadeSizeCurve);
-        setActiveFadeOpacityCurve(fadeOpacityCurve);
-        setActiveVelocityCurve(velocityCurve);
-        setActiveRotationSpeedCurve(rotationSpeedCurve);
+        setActiveMaxParticles(maxParticles)
+        setActiveLighting(lighting)
+        setActiveAppearance(appearance)
+        setActiveOrientToDirection(orientToDirection)
+        setActiveGeometry(geometry)
+        setActiveShadow(shadow)
+        setActiveFadeSizeCurve(fadeSizeCurve)
+        setActiveFadeOpacityCurve(fadeOpacityCurve)
+        setActiveVelocityCurve(velocityCurve)
+        setActiveRotationSpeedCurve(rotationSpeedCurve)
         setActiveNeedsPerParticleColor(
           colorStart.length > 1 || colorEnd !== null
-        );
+        )
         setActiveNeedsRotation(
           isNonDefaultRotation(rotation) || isNonDefaultRotation(rotationSpeed)
-        );
+        )
         setActiveTurbulence(
           turbulence !== null && (turbulence?.intensity ?? 0) > 0
-        );
-        setActiveAttractors(attractors !== null && attractors.length > 0);
-        setActiveCollision(collision !== null);
+        )
+        setActiveAttractors(attractors !== null && attractors.length > 0)
+        setActiveCollision(collision !== null)
       }
     }, [
       debug,
@@ -375,16 +375,16 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
       turbulence,
       attractors,
       collision,
-    ]);
+    ])
 
     // Normalize props to [min, max] ranges
-    const sizeRange = useMemo(() => toRange(size, [0.1, 0.3]), [size]);
-    const speedRange = useMemo(() => toRange(speed, [0.1, 0.1]), [speed]);
-    const fadeSizeRange = useMemo(() => toRange(fadeSize, [1, 0]), [fadeSize]);
+    const sizeRange = useMemo(() => toRange(size, [0.1, 0.3]), [size])
+    const speedRange = useMemo(() => toRange(speed, [0.1, 0.1]), [speed])
+    const fadeSizeRange = useMemo(() => toRange(fadeSize, [1, 0]), [fadeSize])
     const fadeOpacityRange = useMemo(
       () => toRange(fadeOpacity, [1, 0]),
       [fadeOpacity]
-    );
+    )
 
     // Create combined curve texture for GPU sampling (use active curves for debug mode)
     // R = size, G = opacity, B = velocity, A = rotation speed
@@ -396,38 +396,38 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
       activeVelocityCurve,
       activeRotationSpeedCurve,
       curveTexturePath
-    );
+    )
 
     // Note: curveTexture is managed by useCurveTextureAsync hook, no manual disposal needed here
-    const prevCurveTextureRef = useRef<THREE.DataTexture | null>(null);
+    const prevCurveTextureRef = useRef<THREE.DataTexture | null>(null)
     useEffect(() => {
-      prevCurveTextureRef.current = curveTexture;
+      prevCurveTextureRef.current = curveTexture
 
       return () => {
         if (curveTexture) {
-          curveTexture.dispose();
+          curveTexture.dispose()
         }
-      };
-    }, [curveTexture]);
-    const lifetimeRange = useMemo(() => toRange(lifetime, [1, 2]), [lifetime]);
-    const rotation3D = useMemo(() => toRotation3D(rotation), [rotation]);
+      }
+    }, [curveTexture])
+    const lifetimeRange = useMemo(() => toRange(lifetime, [1, 2]), [lifetime])
+    const rotation3D = useMemo(() => toRotation3D(rotation), [rotation])
     const rotationSpeed3D = useMemo(
       () => toRotation3D(rotationSpeed),
       [rotationSpeed]
-    );
-    const direction3D = useMemo(() => toRotation3D(direction), [direction]);
+    )
+    const direction3D = useMemo(() => toRotation3D(direction), [direction])
     const startPosition3D = useMemo(
       () => toRotation3D(startPosition),
       [startPosition]
-    );
+    )
     const emitterRadiusRange = useMemo(
       () => toRange(emitterRadius, [0, 1]),
       [emitterRadius]
-    );
+    )
     const emitterHeightRange = useMemo(
       () => toRange(emitterHeight, [0, 1]),
       [emitterHeight]
-    );
+    )
 
     // Determine which features are active (affects storage arrays and shader generation)
     // Uses state so debug panel can trigger storage array recreation
@@ -450,7 +450,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         activeAttractors,
         activeCollision,
       ]
-    );
+    )
 
     // Parse friction object: { intensity: [start, end] or single value, easing: string }
     const frictionIntensityRange = useMemo(() => {
@@ -459,38 +459,38 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         friction !== null &&
         'intensity' in friction
       ) {
-        return toRange(friction.intensity, [0, 0]);
+        return toRange(friction.intensity, [0, 0])
       }
-      return [0, 0]; // Default: no friction
-    }, [friction]);
+      return [0, 0] // Default: no friction
+    }, [friction])
     const frictionEasingType = useMemo(() => {
       if (
         typeof friction === 'object' &&
         friction !== null &&
         'easing' in friction
       ) {
-        return easingToType(friction.easing ?? 'linear');
+        return easingToType(friction.easing ?? 'linear')
       }
-      return 0; // linear
-    }, [friction]);
+      return 0 // linear
+    }, [friction])
 
     // Convert color arrays to RGB (support up to 8 colors each)
     const startColors = useMemo(() => {
-      const colors = colorStart.slice(0, 8).map(hexToRgb);
+      const colors = colorStart.slice(0, 8).map(hexToRgb)
       while (colors.length < 8)
-        colors.push(colors[colors.length - 1] || [1, 1, 1]);
-      return colors;
-    }, [colorStart]);
+        colors.push(colors[colors.length - 1] || [1, 1, 1])
+      return colors
+    }, [colorStart])
 
     // Use colorStart if colorEnd is not provided (no color transition)
-    const effectiveColorEnd = colorEnd ?? colorStart;
+    const effectiveColorEnd = colorEnd ?? colorStart
 
     const endColors = useMemo(() => {
-      const colors = effectiveColorEnd.slice(0, 8).map(hexToRgb);
+      const colors = effectiveColorEnd.slice(0, 8).map(hexToRgb)
       while (colors.length < 8)
-        colors.push(colors[colors.length - 1] || [1, 1, 1]);
-      return colors;
-    }, [effectiveColorEnd]);
+        colors.push(colors[colors.length - 1] || [1, 1, 1])
+      return colors
+    }, [effectiveColorEnd])
 
     // Uniforms
     const uniforms = useMemo(
@@ -638,176 +638,174 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         sizeBasedGravity: uniform(collision?.sizeBasedGravity ?? 0),
       }),
       []
-    );
+    )
 
     // Store position prop for use in spawn
-    const positionRef = useRef(position);
+    const positionRef = useRef(position)
 
     // Update all uniforms when props change (skip in debug mode - debug panel handles this)
     useEffect(() => {
       // In debug mode, the debug panel controls uniform values via handleDebugUpdate
       // Skip this effect to avoid overwriting user changes from the panel
-      if (debug) return;
+      if (debug) return
 
-      positionRef.current = position;
+      positionRef.current = position
 
       // Size
-      uniforms.sizeMin.value = sizeRange[0];
-      uniforms.sizeMax.value = sizeRange[1];
+      uniforms.sizeMin.value = sizeRange[0]
+      uniforms.sizeMax.value = sizeRange[1]
 
       // Fade
-      uniforms.fadeSizeStart.value = fadeSizeRange[0];
-      uniforms.fadeSizeEnd.value = fadeSizeRange[1];
-      uniforms.fadeOpacityStart.value = fadeOpacityRange[0];
-      uniforms.fadeOpacityEnd.value = fadeOpacityRange[1];
+      uniforms.fadeSizeStart.value = fadeSizeRange[0]
+      uniforms.fadeSizeEnd.value = fadeSizeRange[1]
+      uniforms.fadeOpacityStart.value = fadeOpacityRange[0]
+      uniforms.fadeOpacityEnd.value = fadeOpacityRange[1]
 
       // Physics
-      uniforms.gravity.value.set(...gravity);
-      uniforms.frictionIntensityStart.value = frictionIntensityRange[0];
-      uniforms.frictionIntensityEnd.value = frictionIntensityRange[1];
-      uniforms.frictionEasingType.value = frictionEasingType;
-      uniforms.speedMin.value = speedRange[0];
-      uniforms.speedMax.value = speedRange[1];
+      uniforms.gravity.value.set(...gravity)
+      uniforms.frictionIntensityStart.value = frictionIntensityRange[0]
+      uniforms.frictionIntensityEnd.value = frictionIntensityRange[1]
+      uniforms.frictionEasingType.value = frictionEasingType
+      uniforms.speedMin.value = speedRange[0]
+      uniforms.speedMax.value = speedRange[1]
 
       // Lifetime
-      uniforms.lifetimeMin.value = lifetimeToFadeRate(lifetimeRange[1]);
-      uniforms.lifetimeMax.value = lifetimeToFadeRate(lifetimeRange[0]);
+      uniforms.lifetimeMin.value = lifetimeToFadeRate(lifetimeRange[1])
+      uniforms.lifetimeMax.value = lifetimeToFadeRate(lifetimeRange[0])
 
       // Direction
       // 3D Direction
-      uniforms.dirMinX.value = direction3D[0][0];
-      uniforms.dirMaxX.value = direction3D[0][1];
-      uniforms.dirMinY.value = direction3D[1][0];
-      uniforms.dirMaxY.value = direction3D[1][1];
-      uniforms.dirMinZ.value = direction3D[2][0];
-      uniforms.dirMaxZ.value = direction3D[2][1];
+      uniforms.dirMinX.value = direction3D[0][0]
+      uniforms.dirMaxX.value = direction3D[0][1]
+      uniforms.dirMinY.value = direction3D[1][0]
+      uniforms.dirMaxY.value = direction3D[1][1]
+      uniforms.dirMinZ.value = direction3D[2][0]
+      uniforms.dirMaxZ.value = direction3D[2][1]
 
       // Start position offset
       // 3D Start Position
-      uniforms.startPosMinX.value = startPosition3D[0][0];
-      uniforms.startPosMaxX.value = startPosition3D[0][1];
-      uniforms.startPosMinY.value = startPosition3D[1][0];
-      uniforms.startPosMaxY.value = startPosition3D[1][1];
-      uniforms.startPosMinZ.value = startPosition3D[2][0];
-      uniforms.startPosMaxZ.value = startPosition3D[2][1];
+      uniforms.startPosMinX.value = startPosition3D[0][0]
+      uniforms.startPosMaxX.value = startPosition3D[0][1]
+      uniforms.startPosMinY.value = startPosition3D[1][0]
+      uniforms.startPosMaxY.value = startPosition3D[1][1]
+      uniforms.startPosMinZ.value = startPosition3D[2][0]
+      uniforms.startPosMaxZ.value = startPosition3D[2][1]
 
       // 3D Rotation
-      uniforms.rotationMinX.value = rotation3D[0][0];
-      uniforms.rotationMaxX.value = rotation3D[0][1];
-      uniforms.rotationMinY.value = rotation3D[1][0];
-      uniforms.rotationMaxY.value = rotation3D[1][1];
-      uniforms.rotationMinZ.value = rotation3D[2][0];
-      uniforms.rotationMaxZ.value = rotation3D[2][1];
+      uniforms.rotationMinX.value = rotation3D[0][0]
+      uniforms.rotationMaxX.value = rotation3D[0][1]
+      uniforms.rotationMinY.value = rotation3D[1][0]
+      uniforms.rotationMaxY.value = rotation3D[1][1]
+      uniforms.rotationMinZ.value = rotation3D[2][0]
+      uniforms.rotationMaxZ.value = rotation3D[2][1]
 
       // 3D Rotation Speed
-      uniforms.rotationSpeedMinX.value = rotationSpeed3D[0][0];
-      uniforms.rotationSpeedMaxX.value = rotationSpeed3D[0][1];
-      uniforms.rotationSpeedMinY.value = rotationSpeed3D[1][0];
-      uniforms.rotationSpeedMaxY.value = rotationSpeed3D[1][1];
-      uniforms.rotationSpeedMinZ.value = rotationSpeed3D[2][0];
-      uniforms.rotationSpeedMaxZ.value = rotationSpeed3D[2][1];
+      uniforms.rotationSpeedMinX.value = rotationSpeed3D[0][0]
+      uniforms.rotationSpeedMaxX.value = rotationSpeed3D[0][1]
+      uniforms.rotationSpeedMinY.value = rotationSpeed3D[1][0]
+      uniforms.rotationSpeedMaxY.value = rotationSpeed3D[1][1]
+      uniforms.rotationSpeedMinZ.value = rotationSpeed3D[2][0]
+      uniforms.rotationSpeedMaxZ.value = rotationSpeed3D[2][1]
 
       // Intensity
-      uniforms.intensity.value = intensity;
+      uniforms.intensity.value = intensity
 
       // Colors
-      uniforms.colorStartCount.value = colorStart.length;
-      uniforms.colorEndCount.value = effectiveColorEnd.length;
+      uniforms.colorStartCount.value = colorStart.length
+      uniforms.colorEndCount.value = effectiveColorEnd.length
       startColors.forEach((c: [number, number, number], i: number) => {
-        (uniforms as unknown as Record<string, { value: THREE.Color }>)[
+        ;(uniforms as unknown as Record<string, { value: THREE.Color }>)[
           `colorStart${i}`
-        ]?.value.setRGB(...c);
-      });
+        ]?.value.setRGB(...c)
+      })
       endColors.forEach((c: [number, number, number], i: number) => {
-        (uniforms as unknown as Record<string, { value: THREE.Color }>)[
+        ;(uniforms as unknown as Record<string, { value: THREE.Color }>)[
           `colorEnd${i}`
-        ]?.value.setRGB(...c);
-      });
+        ]?.value.setRGB(...c)
+      })
 
       // Emitter shape
-      uniforms.emitterShapeType.value = emitterShape;
-      uniforms.emitterRadiusInner.value = emitterRadiusRange[0];
-      uniforms.emitterRadiusOuter.value = emitterRadiusRange[1];
-      uniforms.emitterAngle.value = emitterAngle;
-      uniforms.emitterHeightMin.value = emitterHeightRange[0];
-      uniforms.emitterHeightMax.value = emitterHeightRange[1];
-      uniforms.emitterSurfaceOnly.value = emitterSurfaceOnly ? 1 : 0;
-      uniforms.emitterDir.value.set(...emitterDirection).normalize();
+      uniforms.emitterShapeType.value = emitterShape
+      uniforms.emitterRadiusInner.value = emitterRadiusRange[0]
+      uniforms.emitterRadiusOuter.value = emitterRadiusRange[1]
+      uniforms.emitterAngle.value = emitterAngle
+      uniforms.emitterHeightMin.value = emitterHeightRange[0]
+      uniforms.emitterHeightMax.value = emitterHeightRange[1]
+      uniforms.emitterSurfaceOnly.value = emitterSurfaceOnly ? 1 : 0
+      uniforms.emitterDir.value.set(...emitterDirection).normalize()
 
       // Turbulence
-      uniforms.turbulenceIntensity.value = turbulence?.intensity ?? 0;
-      uniforms.turbulenceFrequency.value = turbulence?.frequency ?? 1;
-      uniforms.turbulenceSpeed.value = turbulence?.speed ?? 1;
+      uniforms.turbulenceIntensity.value = turbulence?.intensity ?? 0
+      uniforms.turbulenceFrequency.value = turbulence?.frequency ?? 1
+      uniforms.turbulenceSpeed.value = turbulence?.speed ?? 1
 
       // Attractors
-      const attractorList = attractors ?? [];
+      const attractorList = attractors ?? []
       uniforms.attractorCount.value = Math.min(
         attractorList.length,
         MAX_ATTRACTORS
-      );
+      )
       for (let i = 0; i < MAX_ATTRACTORS; i++) {
-        const a = attractorList[i];
+        const a = attractorList[i]
         // @ts-expect-error - Dynamic uniform indexing
-        const u = uniforms as Record<string, { value: THREE.Vector3 | number }>;
+        const u = uniforms as Record<string, { value: THREE.Vector3 | number }>
         if (a) {
-          (u[`attractor${i}Pos`].value as THREE.Vector3).set(
+          ;(u[`attractor${i}Pos`].value as THREE.Vector3).set(
             ...(a.position ?? [0, 0, 0])
-          );
-          u[`attractor${i}Strength`].value = a.strength ?? 1;
-          u[`attractor${i}Radius`].value = a.radius ?? 0; // 0 = infinite
-          u[`attractor${i}Type`].value = a.type === 'vortex' ? 1 : 0;
-          (u[`attractor${i}Axis`].value as THREE.Vector3)
+          )
+          u[`attractor${i}Strength`].value = a.strength ?? 1
+          u[`attractor${i}Radius`].value = a.radius ?? 0 // 0 = infinite
+          u[`attractor${i}Type`].value = a.type === 'vortex' ? 1 : 0
+          ;(u[`attractor${i}Axis`].value as THREE.Vector3)
             .set(...(a.axis ?? [0, 1, 0]))
-            .normalize();
+            .normalize()
         } else {
-          u[`attractor${i}Strength`].value = 0;
+          u[`attractor${i}Strength`].value = 0
         }
       }
 
       // Simple attract to center
-      uniforms.attractToCenter.value = attractToCenter ? 1 : 0;
+      uniforms.attractToCenter.value = attractToCenter ? 1 : 0
 
       // Start position as direction
-      uniforms.startPositionAsDirection.value = startPositionAsDirection
-        ? 1
-        : 0;
+      uniforms.startPositionAsDirection.value = startPositionAsDirection ? 1 : 0
 
       // Soft particles
-      uniforms.softParticlesEnabled.value = softParticles ? 1 : 0;
-      uniforms.softDistance.value = softDistance;
+      uniforms.softParticlesEnabled.value = softParticles ? 1 : 0
+      uniforms.softDistance.value = softDistance
 
       // Velocity curve (when enabled, overrides friction)
       // Enable if velocityCurve prop is set OR curveTexturePath is provided
       uniforms.velocityCurveEnabled.value =
-        velocityCurve || curveTexturePath ? 1 : 0;
+        velocityCurve || curveTexturePath ? 1 : 0
 
       // Rotation speed curve
       uniforms.rotationSpeedCurveEnabled.value =
-        rotationSpeedCurve || curveTexturePath ? 1 : 0;
+        rotationSpeedCurve || curveTexturePath ? 1 : 0
 
       // Fade size curve (when enabled, uses curve instead of fadeSize prop)
       uniforms.fadeSizeCurveEnabled.value =
-        fadeSizeCurve || curveTexturePath ? 1 : 0;
+        fadeSizeCurve || curveTexturePath ? 1 : 0
 
       // Fade opacity curve (when enabled, uses curve instead of fadeOpacity prop)
       uniforms.fadeOpacityCurveEnabled.value =
-        fadeOpacityCurve || curveTexturePath ? 1 : 0;
+        fadeOpacityCurve || curveTexturePath ? 1 : 0
 
       // Orient axis
-      uniforms.orientAxisType.value = axisToNumber(orientAxis);
+      uniforms.orientAxisType.value = axisToNumber(orientAxis)
 
       // Stretch by speed
-      uniforms.stretchEnabled.value = stretchBySpeed ? 1 : 0;
-      uniforms.stretchFactor.value = stretchBySpeed?.factor ?? 1;
-      uniforms.stretchMax.value = stretchBySpeed?.maxStretch ?? 5;
+      uniforms.stretchEnabled.value = stretchBySpeed ? 1 : 0
+      uniforms.stretchFactor.value = stretchBySpeed?.factor ?? 1
+      uniforms.stretchMax.value = stretchBySpeed?.maxStretch ?? 5
 
       // Collision
-      uniforms.collisionEnabled.value = collision ? 1 : 0;
-      uniforms.collisionPlaneY.value = collision?.plane?.y ?? 0;
-      uniforms.collisionBounce.value = collision?.bounce ?? 0.3;
-      uniforms.collisionFriction.value = collision?.friction ?? 0.8;
-      uniforms.collisionDie.value = collision?.die ? 1 : 0;
-      uniforms.sizeBasedGravity.value = collision?.sizeBasedGravity ?? 0;
+      uniforms.collisionEnabled.value = collision ? 1 : 0
+      uniforms.collisionPlaneY.value = collision?.plane?.y ?? 0
+      uniforms.collisionBounce.value = collision?.bounce ?? 0.3
+      uniforms.collisionFriction.value = collision?.friction ?? 0.8
+      uniforms.collisionDie.value = collision?.die ? 1 : 0
+      uniforms.sizeBasedGravity.value = collision?.sizeBasedGravity ?? 0
     }, [
       debug,
       position,
@@ -849,7 +847,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
       curveTexturePath,
       orientAxis,
       stretchBySpeed,
-    ]);
+    ])
 
     // GPU Storage arrays
     // ADDITIVE: Color arrays only created when needed (multiple colors or color transition)
@@ -864,37 +862,37 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         particleRotations: null,
         particleColorStarts: null,
         particleColorEnds: null,
-      };
+      }
 
       // Only create rotation array if rotation or rotationSpeed is non-default
       if (activeFeatures.needsRotation) {
-        arrays.particleRotations = instancedArray(activeMaxParticles, 'vec3');
+        arrays.particleRotations = instancedArray(activeMaxParticles, 'vec3')
       }
 
       // Only create color arrays if needed (multiple start colors or color transition)
       if (activeFeatures.needsPerParticleColor) {
-        arrays.particleColorStarts = instancedArray(activeMaxParticles, 'vec3');
-        arrays.particleColorEnds = instancedArray(activeMaxParticles, 'vec3');
+        arrays.particleColorStarts = instancedArray(activeMaxParticles, 'vec3')
+        arrays.particleColorEnds = instancedArray(activeMaxParticles, 'vec3')
       }
 
-      return arrays;
+      return arrays
     }, [
       activeMaxParticles,
       activeFeatures.needsRotation,
       activeFeatures.needsPerParticleColor,
-    ]);
+    ])
 
     // Initialize all particles as dead
     const computeInit = useMemo(
       () => createInitCompute(storage, activeMaxParticles),
       [storage, activeMaxParticles]
-    );
+    )
 
     // Spawn compute shader
     const computeSpawn = useMemo(
       () => createSpawnCompute(storage, uniforms, activeMaxParticles),
       [storage, uniforms, activeMaxParticles]
-    );
+    )
 
     // Update particles each frame (framerate independent)
     // Pass shader features to generate optimized shader (skip unused code)
@@ -914,7 +912,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
           }
         ),
       [storage, uniforms, curveTexture, activeMaxParticles, activeFeatures]
-    );
+    )
 
     // Material (either Sprite or Mesh material based on geometry prop)
     const material = useMemo(
@@ -954,7 +952,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         softParticles,
         activeShadow,
       ]
-    );
+    )
 
     // Create sprite or instanced mesh based on geometry prop
     const renderObject = useMemo(() => {
@@ -964,38 +962,38 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
           activeGeometry,
           material,
           activeMaxParticles
-        );
-        mesh.frustumCulled = false;
-        mesh.castShadow = activeShadow;
-        mesh.receiveShadow = activeShadow;
-        return mesh;
+        )
+        mesh.frustumCulled = false
+        mesh.castShadow = activeShadow
+        mesh.receiveShadow = activeShadow
+        return mesh
       } else {
         // Sprite mode (default)
         // @ts-expect-error - WebGPU SpriteNodeMaterial type mismatch
-        const s = new THREE.Sprite(material);
-        s.count = activeMaxParticles;
-        s.frustumCulled = false;
-        return s;
+        const s = new THREE.Sprite(material)
+        s.count = activeMaxParticles
+        s.frustumCulled = false
+        return s
       }
-    }, [material, activeMaxParticles, activeGeometry, activeShadow]);
+    }, [material, activeMaxParticles, activeGeometry, activeShadow])
 
     // Initialize on mount
     useEffect(() => {
-      if (!renderer || initialized.current) return;
+      if (!renderer || initialized.current) return
       // @ts-expect-error - WebGPU computeAsync not in WebGL types
       renderer.computeAsync(computeInit).then(() => {
-        initialized.current = true;
-      });
-    }, [renderer, computeInit]);
+        initialized.current = true
+      })
+    }, [renderer, computeInit])
 
     // Apply spawn overrides to uniforms, returns restore function
     const applySpawnOverrides = useCallback(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (overrides: Record<string, any> | null) => {
-        if (!overrides) return null;
+        if (!overrides) return null
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const saved: Record<string, any> = {};
+        const saved: Record<string, any> = {}
 
         // Helper to save and set uniform value
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1003,101 +1001,101 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
           // @ts-expect-error - Dynamic uniform access
           if (uniforms[key]) {
             // @ts-expect-error - Dynamic uniform access
-            saved[key] = uniforms[key].value;
+            saved[key] = uniforms[key].value
             // @ts-expect-error - Dynamic uniform access
-            uniforms[key].value = value;
+            uniforms[key].value = value
           }
-        };
+        }
 
         // Size: number or [min, max]
         if (overrides.size !== undefined) {
-          const range = toRange(overrides.size, [0.1, 0.3]);
-          setUniform('sizeMin', range[0]);
-          setUniform('sizeMax', range[1]);
+          const range = toRange(overrides.size, [0.1, 0.3])
+          setUniform('sizeMin', range[0])
+          setUniform('sizeMax', range[1])
         }
 
         // Speed: number or [min, max]
         if (overrides.speed !== undefined) {
-          const range = toRange(overrides.speed, [0.1, 0.1]);
-          setUniform('speedMin', range[0]);
-          setUniform('speedMax', range[1]);
+          const range = toRange(overrides.speed, [0.1, 0.1])
+          setUniform('speedMin', range[0])
+          setUniform('speedMax', range[1])
         }
 
         // Lifetime: number or [min, max]
         if (overrides.lifetime !== undefined) {
-          const range = toRange(overrides.lifetime, [1, 2]);
-          setUniform('lifetimeMin', 1 / range[1]);
-          setUniform('lifetimeMax', 1 / range[0]);
+          const range = toRange(overrides.lifetime, [1, 2])
+          setUniform('lifetimeMin', 1 / range[1])
+          setUniform('lifetimeMax', 1 / range[0])
         }
 
         // Direction: [[minX, maxX], [minY, maxY], [minZ, maxZ]] or [min, max] or number
         if (overrides.direction !== undefined) {
-          const dir3D = toRotation3D(overrides.direction);
-          setUniform('dirMinX', dir3D[0][0]);
-          setUniform('dirMaxX', dir3D[0][1]);
-          setUniform('dirMinY', dir3D[1][0]);
-          setUniform('dirMaxY', dir3D[1][1]);
-          setUniform('dirMinZ', dir3D[2][0]);
-          setUniform('dirMaxZ', dir3D[2][1]);
+          const dir3D = toRotation3D(overrides.direction)
+          setUniform('dirMinX', dir3D[0][0])
+          setUniform('dirMaxX', dir3D[0][1])
+          setUniform('dirMinY', dir3D[1][0])
+          setUniform('dirMaxY', dir3D[1][1])
+          setUniform('dirMinZ', dir3D[2][0])
+          setUniform('dirMaxZ', dir3D[2][1])
         }
 
         // Start position offset
         if (overrides.startPosition !== undefined) {
-          const pos3D = toRotation3D(overrides.startPosition);
-          setUniform('startPosMinX', pos3D[0][0]);
-          setUniform('startPosMaxX', pos3D[0][1]);
-          setUniform('startPosMinY', pos3D[1][0]);
-          setUniform('startPosMaxY', pos3D[1][1]);
-          setUniform('startPosMinZ', pos3D[2][0]);
-          setUniform('startPosMaxZ', pos3D[2][1]);
+          const pos3D = toRotation3D(overrides.startPosition)
+          setUniform('startPosMinX', pos3D[0][0])
+          setUniform('startPosMaxX', pos3D[0][1])
+          setUniform('startPosMinY', pos3D[1][0])
+          setUniform('startPosMaxY', pos3D[1][1])
+          setUniform('startPosMinZ', pos3D[2][0])
+          setUniform('startPosMaxZ', pos3D[2][1])
         }
 
         // Gravity: [x, y, z]
         if (overrides.gravity !== undefined) {
-          saved.gravity = uniforms.gravity.value.clone();
+          saved.gravity = uniforms.gravity.value.clone()
           uniforms.gravity.value.set(
             ...(overrides.gravity as [number, number, number])
-          );
+          )
         }
 
         // Colors - requires converting hex to RGB and setting multiple uniforms
         // @ts-expect-error - Dynamic uniform access
-        const u = uniforms as Record<string, { value: THREE.Color }>;
+        const u = uniforms as Record<string, { value: THREE.Color }>
         if (overrides.colorStart !== undefined) {
-          const colors = overrides.colorStart.slice(0, 8).map(hexToRgb);
+          const colors = overrides.colorStart.slice(0, 8).map(hexToRgb)
           while (colors.length < 8)
-            colors.push(colors[colors.length - 1] || [1, 1, 1]);
-          setUniform('colorStartCount', overrides.colorStart.length);
+            colors.push(colors[colors.length - 1] || [1, 1, 1])
+          setUniform('colorStartCount', overrides.colorStart.length)
           colors.forEach((c: [number, number, number], i: number) => {
             if (u[`colorStart${i}`]) {
-              saved[`colorStart${i}`] = u[`colorStart${i}`].value.clone();
-              u[`colorStart${i}`].value.setRGB(...c);
+              saved[`colorStart${i}`] = u[`colorStart${i}`].value.clone()
+              u[`colorStart${i}`].value.setRGB(...c)
             }
-          });
+          })
         }
 
         if (overrides.colorEnd !== undefined) {
-          const colors = overrides.colorEnd.slice(0, 8).map(hexToRgb);
+          const colors = overrides.colorEnd.slice(0, 8).map(hexToRgb)
           while (colors.length < 8)
-            colors.push(colors[colors.length - 1] || [1, 1, 1]);
-          setUniform('colorEndCount', overrides.colorEnd.length);
+            colors.push(colors[colors.length - 1] || [1, 1, 1])
+          setUniform('colorEndCount', overrides.colorEnd.length)
           colors.forEach((c: [number, number, number], i: number) => {
             if (u[`colorEnd${i}`]) {
-              saved[`colorEnd${i}`] = u[`colorEnd${i}`].value.clone();
-              u[`colorEnd${i}`].value.setRGB(...c);
+              saved[`colorEnd${i}`] = u[`colorEnd${i}`].value.clone()
+              u[`colorEnd${i}`].value.setRGB(...c)
             }
-          });
+          })
         }
 
         // Rotation
         if (overrides.rotation !== undefined) {
-          const rot3D = toRotation3D(overrides.rotation);
-          setUniform('rotationMinX', rot3D[0][0]);
-          setUniform('rotationMaxX', rot3D[0][1]);
-          setUniform('rotationMinY', rot3D[1][0]);
-          setUniform('rotationMaxY', rot3D[1][1]);
-          setUniform('rotationMinZ', rot3D[2][0]);
-          setUniform('rotationMaxZ', rot3D[2][1]);
+          const rot3D = toRotation3D(overrides.rotation)
+          setUniform('rotationMinX', rot3D[0][0])
+          setUniform('rotationMaxX', rot3D[0][1])
+          setUniform('rotationMinY', rot3D[1][0])
+          setUniform('rotationMaxY', rot3D[1][1])
+          setUniform('rotationMinZ', rot3D[2][0])
+          setUniform('rotationMaxZ', rot3D[2][1])
         }
 
         // Return restore function
@@ -1106,13 +1104,13 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
             // @ts-expect-error - Dynamic uniform access
             if (uniforms[key]) {
               // @ts-expect-error - Dynamic uniform access
-              uniforms[key].value = value;
+              uniforms[key].value = value
             }
-          });
-        };
+          })
+        }
       },
       [uniforms]
-    );
+    )
 
     // Spawn function - internal
     const spawnInternal = useCallback(
@@ -1123,28 +1121,28 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         count = 20,
         overrides: Record<string, unknown> | null = null
       ) => {
-        if (!initialized.current || !renderer) return;
+        if (!initialized.current || !renderer) return
 
         // Apply overrides and get restore function
-        const restore = applySpawnOverrides(overrides);
+        const restore = applySpawnOverrides(overrides)
 
-        const startIdx = nextIndex.current;
-        const endIdx = (startIdx + count) % activeMaxParticles;
+        const startIdx = nextIndex.current
+        const endIdx = (startIdx + count) % activeMaxParticles
 
-        uniforms.spawnPosition.value.set(x, y, z);
-        uniforms.spawnIndexStart.value = startIdx;
-        uniforms.spawnIndexEnd.value = endIdx;
-        uniforms.spawnSeed.value = Math.random() * 10000;
+        uniforms.spawnPosition.value.set(x, y, z)
+        uniforms.spawnIndexStart.value = startIdx
+        uniforms.spawnIndexEnd.value = endIdx
+        uniforms.spawnSeed.value = Math.random() * 10000
 
-        nextIndex.current = endIdx;
+        nextIndex.current = endIdx
 
         // Run compute - GPU reads uniforms when dispatched, so restore immediately
         // This prevents race conditions when multiple emitters spawn in the same frame
         // @ts-expect-error - WebGPU computeAsync not in WebGL types
-        renderer.computeAsync(computeSpawn);
+        renderer.computeAsync(computeSpawn)
 
         // Restore original values synchronously after dispatch
-        if (restore) restore();
+        if (restore) restore()
       },
       [
         renderer,
@@ -1153,7 +1151,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         activeMaxParticles,
         applySpawnOverrides,
       ]
-    );
+    )
 
     // Public spawn - uses position prop as offset, supports overrides
     // spawn(x, y, z, count, { colorStart: [...], direction: [...], ... })
@@ -1165,76 +1163,76 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         count = 20,
         overrides: Record<string, unknown> | null = null
       ) => {
-        const [px, py, pz] = positionRef.current ?? [0, 0, 0];
-        spawnInternal(px + x, py + y, pz + z, count, overrides);
+        const [px, py, pz] = positionRef.current ?? [0, 0, 0]
+        spawnInternal(px + x, py + y, pz + z, count, overrides)
       },
       [spawnInternal]
-    );
+    )
 
     // Keep computeUpdate in a ref so useFrame always has the latest version
-    const computeUpdateRef = useRef(computeUpdate);
+    const computeUpdateRef = useRef(computeUpdate)
     useEffect(() => {
-      computeUpdateRef.current = computeUpdate;
-    }, [computeUpdate]);
+      computeUpdateRef.current = computeUpdate
+    }, [computeUpdate])
 
     // Update each frame + auto emit
     useFrame(async (state, delta) => {
-      if (!initialized.current || !renderer) return;
+      if (!initialized.current || !renderer) return
 
       // Update deltaTime uniform for framerate independence
-      uniforms.deltaTime.value = delta;
+      uniforms.deltaTime.value = delta
 
       // Update turbulence time (animated noise field)
-      const turbSpeed = turbulenceRef.current?.speed ?? 1;
-      uniforms.turbulenceTime.value += delta * turbSpeed;
+      const turbSpeed = turbulenceRef.current?.speed ?? 1
+      uniforms.turbulenceTime.value += delta * turbSpeed
 
       // Update particles - use ref to always get latest computeUpdate
       // @ts-expect-error - WebGPU computeAsync not in WebGL types
-      await renderer.computeAsync(computeUpdateRef.current);
+      await renderer.computeAsync(computeUpdateRef.current)
 
       // Auto emit if enabled
       if (emitting) {
-        const [px, py, pz] = positionRef.current;
-        const currentDelay = delayRef.current;
-        const currentEmitCount = emitCountRef.current;
+        const [px, py, pz] = positionRef.current
+        const currentDelay = delayRef.current
+        const currentEmitCount = emitCountRef.current
 
         if (!currentDelay) {
           // delay = 0 or undefined → emit every frame
-          spawnInternal(px, py, pz, currentEmitCount);
+          spawnInternal(px, py, pz, currentEmitCount)
         } else {
           // delay > 0 → emit every X seconds
-          emitAccumulator.current += delta;
+          emitAccumulator.current += delta
 
           if (emitAccumulator.current >= currentDelay) {
-            emitAccumulator.current -= currentDelay;
-            spawnInternal(px, py, pz, currentEmitCount);
+            emitAccumulator.current -= currentDelay
+            spawnInternal(px, py, pz, currentEmitCount)
           }
         }
       }
-    });
+    })
 
     // Start/stop functions
     const start = useCallback(() => {
-      setEmitting(true);
-      emitAccumulator.current = 0;
-    }, []);
+      setEmitting(true)
+      emitAccumulator.current = 0
+    }, [])
 
     const stop = useCallback(() => {
-      setEmitting(false);
-    }, []);
+      setEmitting(false)
+    }, [])
 
     // Cleanup old material/renderObject when they change (not on unmount)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const prevMaterialRef = useRef<any>(null);
+    const prevMaterialRef = useRef<any>(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const prevRenderObjectRef = useRef<any>(null);
+    const prevRenderObjectRef = useRef<any>(null)
 
     useEffect(() => {
       // Dispose previous material if it changed
       if (prevMaterialRef.current && prevMaterialRef.current !== material) {
-        prevMaterialRef.current.dispose();
+        prevMaterialRef.current.dispose()
       }
-      prevMaterialRef.current = material;
+      prevMaterialRef.current = material
 
       // Dispose previous renderObject if it changed
       if (
@@ -1242,36 +1240,36 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         prevRenderObjectRef.current !== renderObject
       ) {
         if (prevRenderObjectRef.current.material) {
-          prevRenderObjectRef.current.material.dispose();
+          prevRenderObjectRef.current.material.dispose()
         }
       }
-      prevRenderObjectRef.current = renderObject;
-    }, [material, renderObject]);
+      prevRenderObjectRef.current = renderObject
+    }, [material, renderObject])
 
     // Cleanup on actual unmount only
     useEffect(() => {
       return () => {
         // Dispose material
         if (material) {
-          material.dispose();
+          material.dispose()
         }
 
         // Dispose render object
         if (renderObject) {
           if (renderObject.geometry && !geometry) {
-            renderObject.geometry.dispose();
+            renderObject.geometry.dispose()
           }
           if (renderObject.material) {
-            renderObject.material.dispose();
+            renderObject.material.dispose()
           }
         }
 
         // Reset initialization state only on unmount
-        initialized.current = false;
-        nextIndex.current = 0;
-      };
+        initialized.current = false
+        nextIndex.current = 0
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [])
 
     // Expose methods via ref
     // Create the API object that will be exposed via ref and registered with store
@@ -1281,228 +1279,228 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         start,
         stop,
         get isEmitting() {
-          return emitting;
+          return emitting
         },
         clear() {
           // @ts-expect-error WebGPU renderer method
-          renderer.computeAsync(computeInit);
-          nextIndex.current = 0;
+          renderer.computeAsync(computeInit)
+          nextIndex.current = 0
         },
         uniforms,
       }),
       [spawn, start, stop, emitting, renderer, computeInit, uniforms]
-    );
+    )
 
-    useImperativeHandle(ref, () => particleAPI, [particleAPI]);
+    useImperativeHandle(ref, () => particleAPI, [particleAPI])
 
     // Register with VFX store when name prop is provided
-    const registerParticles = useVFXStore((s) => s.registerParticles);
-    const unregisterParticles = useVFXStore((s) => s.unregisterParticles);
+    const registerParticles = useVFXStore((s) => s.registerParticles)
+    const unregisterParticles = useVFXStore((s) => s.unregisterParticles)
 
     useEffect(() => {
-      if (!name) return;
+      if (!name) return
 
       // Register this particle system with the store
-      registerParticles(name, particleAPI);
+      registerParticles(name, particleAPI)
 
       return () => {
         // Unregister on unmount or name change
-        unregisterParticles(name);
-      };
-    }, [name, particleAPI, registerParticles, unregisterParticles]);
+        unregisterParticles(name)
+      }
+    }, [name, particleAPI, registerParticles, unregisterParticles])
 
     // Debug panel - no React state, direct ref mutation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const debugValuesRef = useRef<any>(null);
+    const debugValuesRef = useRef<any>(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const prevGeometryTypeRef = useRef<any>(null);
+    const prevGeometryTypeRef = useRef<any>(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const prevGeometryArgsRef = useRef<any>(null);
+    const prevGeometryArgsRef = useRef<any>(null)
 
     // Imperative update function called by debug panel
     const handleDebugUpdate = useCallback(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (newValues: any) => {
         // Merge new values into existing (dirty tracking only sends changed keys)
-        debugValuesRef.current = { ...debugValuesRef.current, ...newValues };
+        debugValuesRef.current = { ...debugValuesRef.current, ...newValues }
 
         // Size
         if ('size' in newValues) {
-          const sizeR = toRange(newValues.size, [0.1, 0.3]);
-          uniforms.sizeMin.value = sizeR[0];
-          uniforms.sizeMax.value = sizeR[1];
+          const sizeR = toRange(newValues.size, [0.1, 0.3])
+          uniforms.sizeMin.value = sizeR[0]
+          uniforms.sizeMax.value = sizeR[1]
         }
 
         // Fade Size
         if ('fadeSize' in newValues) {
-          const fadeSizeR = toRange(newValues.fadeSize, [1, 0]);
-          uniforms.fadeSizeStart.value = fadeSizeR[0];
-          uniforms.fadeSizeEnd.value = fadeSizeR[1];
+          const fadeSizeR = toRange(newValues.fadeSize, [1, 0])
+          uniforms.fadeSizeStart.value = fadeSizeR[0]
+          uniforms.fadeSizeEnd.value = fadeSizeR[1]
         }
 
         // Fade Opacity
         if ('fadeOpacity' in newValues) {
-          const fadeOpacityR = toRange(newValues.fadeOpacity, [1, 0]);
-          uniforms.fadeOpacityStart.value = fadeOpacityR[0];
-          uniforms.fadeOpacityEnd.value = fadeOpacityR[1];
+          const fadeOpacityR = toRange(newValues.fadeOpacity, [1, 0])
+          uniforms.fadeOpacityStart.value = fadeOpacityR[0]
+          uniforms.fadeOpacityEnd.value = fadeOpacityR[1]
         }
 
         // Curves - update state to trigger texture regeneration
         // Only set if the key exists (to allow clearing curves by setting to null)
         if ('fadeSizeCurve' in newValues) {
-          setActiveFadeSizeCurve(newValues.fadeSizeCurve);
+          setActiveFadeSizeCurve(newValues.fadeSizeCurve)
           // Update fade size curve enabled uniform
-          uniforms.fadeSizeCurveEnabled.value = newValues.fadeSizeCurve ? 1 : 0;
+          uniforms.fadeSizeCurveEnabled.value = newValues.fadeSizeCurve ? 1 : 0
         }
         if ('fadeOpacityCurve' in newValues) {
-          setActiveFadeOpacityCurve(newValues.fadeOpacityCurve);
+          setActiveFadeOpacityCurve(newValues.fadeOpacityCurve)
           // Update fade opacity curve enabled uniform
           uniforms.fadeOpacityCurveEnabled.value = newValues.fadeOpacityCurve
             ? 1
-            : 0;
+            : 0
         }
         if ('velocityCurve' in newValues) {
-          setActiveVelocityCurve(newValues.velocityCurve);
+          setActiveVelocityCurve(newValues.velocityCurve)
           // Update velocity curve enabled uniform
-          uniforms.velocityCurveEnabled.value = newValues.velocityCurve ? 1 : 0;
+          uniforms.velocityCurveEnabled.value = newValues.velocityCurve ? 1 : 0
         }
         if ('rotationSpeedCurve' in newValues) {
-          setActiveRotationSpeedCurve(newValues.rotationSpeedCurve);
+          setActiveRotationSpeedCurve(newValues.rotationSpeedCurve)
           // Update rotation speed curve enabled uniform
           uniforms.rotationSpeedCurveEnabled.value =
-            newValues.rotationSpeedCurve ? 1 : 0;
+            newValues.rotationSpeedCurve ? 1 : 0
         }
 
         // Orient axis
         if ('orientAxis' in newValues) {
-          uniforms.orientAxisType.value = axisToNumber(newValues.orientAxis);
+          uniforms.orientAxisType.value = axisToNumber(newValues.orientAxis)
         }
 
         // Stretch by speed
         if ('stretchBySpeed' in newValues) {
-          uniforms.stretchEnabled.value = newValues.stretchBySpeed ? 1 : 0;
-          uniforms.stretchFactor.value = newValues.stretchBySpeed?.factor ?? 1;
-          uniforms.stretchMax.value = newValues.stretchBySpeed?.maxStretch ?? 5;
+          uniforms.stretchEnabled.value = newValues.stretchBySpeed ? 1 : 0
+          uniforms.stretchFactor.value = newValues.stretchBySpeed?.factor ?? 1
+          uniforms.stretchMax.value = newValues.stretchBySpeed?.maxStretch ?? 5
         }
 
         // Physics - update gravity Vector3 components directly
         if (newValues.gravity && Array.isArray(newValues.gravity)) {
-          uniforms.gravity.value.x = newValues.gravity[0];
-          uniforms.gravity.value.y = newValues.gravity[1];
-          uniforms.gravity.value.z = newValues.gravity[2];
+          uniforms.gravity.value.x = newValues.gravity[0]
+          uniforms.gravity.value.y = newValues.gravity[1]
+          uniforms.gravity.value.z = newValues.gravity[2]
         }
 
         // Speed
         if ('speed' in newValues) {
-          const speedR = toRange(newValues.speed, [0.1, 0.1]);
-          uniforms.speedMin.value = speedR[0];
-          uniforms.speedMax.value = speedR[1];
+          const speedR = toRange(newValues.speed, [0.1, 0.1])
+          uniforms.speedMin.value = speedR[0]
+          uniforms.speedMax.value = speedR[1]
         }
 
         // Lifetime
         if ('lifetime' in newValues) {
-          const lifetimeR = toRange(newValues.lifetime, [1, 2]);
-          uniforms.lifetimeMin.value = 1 / lifetimeR[1];
-          uniforms.lifetimeMax.value = 1 / lifetimeR[0];
+          const lifetimeR = toRange(newValues.lifetime, [1, 2])
+          uniforms.lifetimeMin.value = 1 / lifetimeR[1]
+          uniforms.lifetimeMax.value = 1 / lifetimeR[0]
         }
 
         // Friction
         if ('friction' in newValues && newValues.friction) {
-          const frictionR = toRange(newValues.friction.intensity, [0, 0]);
-          uniforms.frictionIntensityStart.value = frictionR[0];
-          uniforms.frictionIntensityEnd.value = frictionR[1];
+          const frictionR = toRange(newValues.friction.intensity, [0, 0])
+          uniforms.frictionIntensityStart.value = frictionR[0]
+          uniforms.frictionIntensityEnd.value = frictionR[1]
           uniforms.frictionEasingType.value = easingToType(
             newValues.friction.easing
-          );
+          )
         }
 
         // Direction 3D
         if ('direction' in newValues) {
-          const dir3D = toRotation3D(newValues.direction);
-          uniforms.dirMinX.value = dir3D[0][0];
-          uniforms.dirMaxX.value = dir3D[0][1];
-          uniforms.dirMinY.value = dir3D[1][0];
-          uniforms.dirMaxY.value = dir3D[1][1];
-          uniforms.dirMinZ.value = dir3D[2][0];
-          uniforms.dirMaxZ.value = dir3D[2][1];
+          const dir3D = toRotation3D(newValues.direction)
+          uniforms.dirMinX.value = dir3D[0][0]
+          uniforms.dirMaxX.value = dir3D[0][1]
+          uniforms.dirMinY.value = dir3D[1][0]
+          uniforms.dirMaxY.value = dir3D[1][1]
+          uniforms.dirMinZ.value = dir3D[2][0]
+          uniforms.dirMaxZ.value = dir3D[2][1]
         }
 
         // Start position 3D
         if ('startPosition' in newValues) {
-          const startPos3D = toRotation3D(newValues.startPosition);
-          uniforms.startPosMinX.value = startPos3D[0][0];
-          uniforms.startPosMaxX.value = startPos3D[0][1];
-          uniforms.startPosMinY.value = startPos3D[1][0];
-          uniforms.startPosMaxY.value = startPos3D[1][1];
-          uniforms.startPosMinZ.value = startPos3D[2][0];
-          uniforms.startPosMaxZ.value = startPos3D[2][1];
+          const startPos3D = toRotation3D(newValues.startPosition)
+          uniforms.startPosMinX.value = startPos3D[0][0]
+          uniforms.startPosMaxX.value = startPos3D[0][1]
+          uniforms.startPosMinY.value = startPos3D[1][0]
+          uniforms.startPosMaxY.value = startPos3D[1][1]
+          uniforms.startPosMinZ.value = startPos3D[2][0]
+          uniforms.startPosMaxZ.value = startPos3D[2][1]
         }
 
         // Rotation 3D
         if ('rotation' in newValues) {
-          const rot3D = toRotation3D(newValues.rotation);
-          uniforms.rotationMinX.value = rot3D[0][0];
-          uniforms.rotationMaxX.value = rot3D[0][1];
-          uniforms.rotationMinY.value = rot3D[1][0];
-          uniforms.rotationMaxY.value = rot3D[1][1];
-          uniforms.rotationMinZ.value = rot3D[2][0];
-          uniforms.rotationMaxZ.value = rot3D[2][1];
+          const rot3D = toRotation3D(newValues.rotation)
+          uniforms.rotationMinX.value = rot3D[0][0]
+          uniforms.rotationMaxX.value = rot3D[0][1]
+          uniforms.rotationMinY.value = rot3D[1][0]
+          uniforms.rotationMaxY.value = rot3D[1][1]
+          uniforms.rotationMinZ.value = rot3D[2][0]
+          uniforms.rotationMaxZ.value = rot3D[2][1]
         }
 
         // Rotation speed 3D
         if ('rotationSpeed' in newValues) {
-          const rotSpeed3D = toRotation3D(newValues.rotationSpeed);
-          uniforms.rotationSpeedMinX.value = rotSpeed3D[0][0];
-          uniforms.rotationSpeedMaxX.value = rotSpeed3D[0][1];
-          uniforms.rotationSpeedMinY.value = rotSpeed3D[1][0];
-          uniforms.rotationSpeedMaxY.value = rotSpeed3D[1][1];
-          uniforms.rotationSpeedMinZ.value = rotSpeed3D[2][0];
-          uniforms.rotationSpeedMaxZ.value = rotSpeed3D[2][1];
+          const rotSpeed3D = toRotation3D(newValues.rotationSpeed)
+          uniforms.rotationSpeedMinX.value = rotSpeed3D[0][0]
+          uniforms.rotationSpeedMaxX.value = rotSpeed3D[0][1]
+          uniforms.rotationSpeedMinY.value = rotSpeed3D[1][0]
+          uniforms.rotationSpeedMaxY.value = rotSpeed3D[1][1]
+          uniforms.rotationSpeedMinZ.value = rotSpeed3D[2][0]
+          uniforms.rotationSpeedMaxZ.value = rotSpeed3D[2][1]
         }
 
         // Update rotation storage state if rotation values changed (triggers storage array recreation)
         if ('rotation' in newValues || 'rotationSpeed' in newValues) {
           const rot = newValues.rotation ??
-            debugValuesRef.current?.rotation ?? [0, 0];
+            debugValuesRef.current?.rotation ?? [0, 0]
           const rotSpeed = newValues.rotationSpeed ??
-            debugValuesRef.current?.rotationSpeed ?? [0, 0];
+            debugValuesRef.current?.rotationSpeed ?? [0, 0]
           const needsRotation =
-            isNonDefaultRotation(rot) || isNonDefaultRotation(rotSpeed);
+            isNonDefaultRotation(rot) || isNonDefaultRotation(rotSpeed)
           if (needsRotation !== activeNeedsRotation) {
-            setActiveNeedsRotation(needsRotation);
+            setActiveNeedsRotation(needsRotation)
           }
         }
 
         // Intensity
         if ('intensity' in newValues) {
-          uniforms.intensity.value = newValues.intensity || 1;
+          uniforms.intensity.value = newValues.intensity || 1
         }
 
         // Colors
         if ('colorStart' in newValues && newValues.colorStart) {
-          const startColors = newValues.colorStart.slice(0, 8).map(hexToRgb);
+          const startColors = newValues.colorStart.slice(0, 8).map(hexToRgb)
           while (startColors.length < 8)
-            startColors.push(startColors[startColors.length - 1] || [1, 1, 1]);
-          uniforms.colorStartCount.value = newValues.colorStart.length;
+            startColors.push(startColors[startColors.length - 1] || [1, 1, 1])
+          uniforms.colorStartCount.value = newValues.colorStart.length
           startColors.forEach((c: [number, number, number], i: number) => {
             // @ts-expect-error Dynamic uniform indexing
             if (uniforms[`colorStart${i}`]) {
               // @ts-expect-error Dynamic uniform indexing
-              uniforms[`colorStart${i}`].value.setRGB(...c);
+              uniforms[`colorStart${i}`].value.setRGB(...c)
             }
-          });
+          })
 
           // If colorEnd is disabled (null), also update colorEnd to match colorStart (no color transition)
-          const currentColorEnd = debugValuesRef.current?.colorEnd;
+          const currentColorEnd = debugValuesRef.current?.colorEnd
           if (!currentColorEnd) {
-            uniforms.colorEndCount.value = newValues.colorStart.length;
+            uniforms.colorEndCount.value = newValues.colorStart.length
             startColors.forEach((c: [number, number, number], i: number) => {
               // @ts-expect-error Dynamic uniform indexing
               if (uniforms[`colorEnd${i}`]) {
                 // @ts-expect-error Dynamic uniform indexing
-                uniforms[`colorEnd${i}`].value.setRGB(...c);
+                uniforms[`colorEnd${i}`].value.setRGB(...c)
               }
-            });
+            })
           }
         }
 
@@ -1512,19 +1510,19 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
           // Fall back to debugValuesRef if newValues.colorStart isn't present
           const effectiveEndColors = newValues.colorEnd ||
             newValues.colorStart ||
-            debugValuesRef.current?.colorStart || ['#ffffff'];
+            debugValuesRef.current?.colorStart || ['#ffffff']
           if (effectiveEndColors) {
-            const endColors = effectiveEndColors.slice(0, 8).map(hexToRgb);
+            const endColors = effectiveEndColors.slice(0, 8).map(hexToRgb)
             while (endColors.length < 8)
-              endColors.push(endColors[endColors.length - 1] || [1, 1, 1]);
-            uniforms.colorEndCount.value = effectiveEndColors.length;
+              endColors.push(endColors[endColors.length - 1] || [1, 1, 1])
+            uniforms.colorEndCount.value = effectiveEndColors.length
             endColors.forEach((c: [number, number, number], i: number) => {
               // @ts-expect-error Dynamic uniform indexing
               if (uniforms[`colorEnd${i}`]) {
                 // @ts-expect-error Dynamic uniform indexing
-                uniforms[`colorEnd${i}`].value.setRGB(...c);
+                uniforms[`colorEnd${i}`].value.setRGB(...c)
               }
-            });
+            })
           }
         }
 
@@ -1533,39 +1531,39 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
           const startLen =
             newValues.colorStart?.length ??
             debugValuesRef.current?.colorStart?.length ??
-            1;
+            1
           const hasColorEnd =
             'colorEnd' in newValues
               ? newValues.colorEnd !== null
-              : debugValuesRef.current?.colorEnd !== null;
-          const needsPerParticle = startLen > 1 || hasColorEnd;
+              : debugValuesRef.current?.colorEnd !== null
+          const needsPerParticle = startLen > 1 || hasColorEnd
           if (needsPerParticle !== activeNeedsPerParticleColor) {
-            setActiveNeedsPerParticleColor(needsPerParticle);
+            setActiveNeedsPerParticleColor(needsPerParticle)
           }
         }
 
         // Emitter shape
         if ('emitterShape' in newValues) {
           uniforms.emitterShapeType.value =
-            newValues.emitterShape ?? EmitterShape.BOX;
+            newValues.emitterShape ?? EmitterShape.BOX
         }
         if ('emitterRadius' in newValues) {
-          const emitterRadiusR = toRange(newValues.emitterRadius, [0, 1]);
-          uniforms.emitterRadiusInner.value = emitterRadiusR[0];
-          uniforms.emitterRadiusOuter.value = emitterRadiusR[1];
+          const emitterRadiusR = toRange(newValues.emitterRadius, [0, 1])
+          uniforms.emitterRadiusInner.value = emitterRadiusR[0]
+          uniforms.emitterRadiusOuter.value = emitterRadiusR[1]
         }
         if ('emitterAngle' in newValues) {
-          uniforms.emitterAngle.value = newValues.emitterAngle ?? Math.PI / 4;
+          uniforms.emitterAngle.value = newValues.emitterAngle ?? Math.PI / 4
         }
         if ('emitterHeight' in newValues) {
-          const emitterHeightR = toRange(newValues.emitterHeight, [0, 1]);
-          uniforms.emitterHeightMin.value = emitterHeightR[0];
-          uniforms.emitterHeightMax.value = emitterHeightR[1];
+          const emitterHeightR = toRange(newValues.emitterHeight, [0, 1])
+          uniforms.emitterHeightMin.value = emitterHeightR[0]
+          uniforms.emitterHeightMax.value = emitterHeightR[1]
         }
         if ('emitterSurfaceOnly' in newValues) {
           uniforms.emitterSurfaceOnly.value = newValues.emitterSurfaceOnly
             ? 1
-            : 0;
+            : 0
         }
         if (
           'emitterDirection' in newValues &&
@@ -1574,93 +1572,93 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         ) {
           const dir = new THREE.Vector3(
             ...newValues.emitterDirection
-          ).normalize();
-          uniforms.emitterDir.value.x = dir.x;
-          uniforms.emitterDir.value.y = dir.y;
-          uniforms.emitterDir.value.z = dir.z;
+          ).normalize()
+          uniforms.emitterDir.value.x = dir.x
+          uniforms.emitterDir.value.y = dir.y
+          uniforms.emitterDir.value.z = dir.z
         }
 
         // Turbulence
         if ('turbulence' in newValues) {
           uniforms.turbulenceIntensity.value =
-            newValues.turbulence?.intensity ?? 0;
+            newValues.turbulence?.intensity ?? 0
           uniforms.turbulenceFrequency.value =
-            newValues.turbulence?.frequency ?? 1;
-          uniforms.turbulenceSpeed.value = newValues.turbulence?.speed ?? 1;
-          turbulenceRef.current = newValues.turbulence;
+            newValues.turbulence?.frequency ?? 1
+          uniforms.turbulenceSpeed.value = newValues.turbulence?.speed ?? 1
+          turbulenceRef.current = newValues.turbulence
           const needsTurbulence =
             newValues.turbulence !== null &&
-            (newValues.turbulence?.intensity ?? 0) > 0;
+            (newValues.turbulence?.intensity ?? 0) > 0
           if (needsTurbulence !== activeTurbulence) {
-            setActiveTurbulence(needsTurbulence);
+            setActiveTurbulence(needsTurbulence)
           }
         }
 
         // Attract to center
         if ('attractToCenter' in newValues) {
-          uniforms.attractToCenter.value = newValues.attractToCenter ? 1 : 0;
+          uniforms.attractToCenter.value = newValues.attractToCenter ? 1 : 0
         }
 
         // Start position as direction
         if ('startPositionAsDirection' in newValues) {
           uniforms.startPositionAsDirection.value =
-            newValues.startPositionAsDirection ? 1 : 0;
+            newValues.startPositionAsDirection ? 1 : 0
         }
 
         // Soft particles
         if ('softParticles' in newValues) {
-          uniforms.softParticlesEnabled.value = newValues.softParticles ? 1 : 0;
+          uniforms.softParticlesEnabled.value = newValues.softParticles ? 1 : 0
         }
         if ('softDistance' in newValues) {
-          uniforms.softDistance.value = newValues.softDistance ?? 0.5;
+          uniforms.softDistance.value = newValues.softDistance ?? 0.5
         }
 
         // Collision
         if ('collision' in newValues) {
-          uniforms.collisionEnabled.value = newValues.collision ? 1 : 0;
-          uniforms.collisionPlaneY.value = newValues.collision?.plane?.y ?? 0;
-          uniforms.collisionBounce.value = newValues.collision?.bounce ?? 0.3;
+          uniforms.collisionEnabled.value = newValues.collision ? 1 : 0
+          uniforms.collisionPlaneY.value = newValues.collision?.plane?.y ?? 0
+          uniforms.collisionBounce.value = newValues.collision?.bounce ?? 0.3
           uniforms.collisionFriction.value =
-            newValues.collision?.friction ?? 0.8;
-          uniforms.collisionDie.value = newValues.collision?.die ? 1 : 0;
+            newValues.collision?.friction ?? 0.8
+          uniforms.collisionDie.value = newValues.collision?.die ? 1 : 0
           uniforms.sizeBasedGravity.value =
-            newValues.collision?.sizeBasedGravity ?? 0;
+            newValues.collision?.sizeBasedGravity ?? 0
           const needsCollision =
-            newValues.collision !== null && newValues.collision !== undefined;
+            newValues.collision !== null && newValues.collision !== undefined
           if (needsCollision !== activeCollision) {
-            setActiveCollision(needsCollision);
+            setActiveCollision(needsCollision)
           }
         }
 
         // Attractors
         if ('attractors' in newValues) {
           const needsAttractors =
-            newValues.attractors !== null && newValues.attractors?.length > 0;
+            newValues.attractors !== null && newValues.attractors?.length > 0
           if (needsAttractors !== activeAttractors) {
-            setActiveAttractors(needsAttractors);
+            setActiveAttractors(needsAttractors)
           }
         }
 
         // Position ref update
         if (newValues.position) {
-          positionRef.current = newValues.position;
+          positionRef.current = newValues.position
         }
 
         // Runtime refs update (for values used in useFrame)
-        if ('delay' in newValues) delayRef.current = newValues.delay ?? 0;
+        if ('delay' in newValues) delayRef.current = newValues.delay ?? 0
         if ('emitCount' in newValues)
-          emitCountRef.current = newValues.emitCount ?? 1;
+          emitCountRef.current = newValues.emitCount ?? 1
         // turbulenceRef is updated in the turbulence block above
 
         // Update emitting state
         if (newValues.autoStart !== undefined) {
-          setEmitting(newValues.autoStart);
+          setEmitting(newValues.autoStart)
         }
 
         // Update material blending directly
         if (material && newValues.blending !== undefined) {
-          material.blending = newValues.blending;
-          material.needsUpdate = true;
+          material.blending = newValues.blending
+          material.needsUpdate = true
         }
 
         // Remount-required values - these trigger useMemo recalculation
@@ -1668,74 +1666,74 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
           newValues.maxParticles !== undefined &&
           newValues.maxParticles !== activeMaxParticles
         ) {
-          setActiveMaxParticles(newValues.maxParticles);
-          initialized.current = false; // Force re-init
-          nextIndex.current = 0;
+          setActiveMaxParticles(newValues.maxParticles)
+          initialized.current = false // Force re-init
+          nextIndex.current = 0
         }
         if (
           newValues.lighting !== undefined &&
           newValues.lighting !== activeLighting
         ) {
-          setActiveLighting(newValues.lighting);
+          setActiveLighting(newValues.lighting)
         }
         if (
           newValues.appearance !== undefined &&
           newValues.appearance !== activeAppearance
         ) {
-          setActiveAppearance(newValues.appearance);
+          setActiveAppearance(newValues.appearance)
         }
         if (
           newValues.orientToDirection !== undefined &&
           newValues.orientToDirection !== activeOrientToDirection
         ) {
-          setActiveOrientToDirection(newValues.orientToDirection);
+          setActiveOrientToDirection(newValues.orientToDirection)
         }
         if (
           newValues.shadow !== undefined &&
           newValues.shadow !== activeShadow
         ) {
-          setActiveShadow(newValues.shadow);
+          setActiveShadow(newValues.shadow)
         }
 
         // Handle geometry type and args changes - only recreate if those keys were actually changed
         if ('geometryType' in newValues || 'geometryArgs' in newValues) {
-          const geoType = newValues.geometryType ?? prevGeometryTypeRef.current;
-          const geoArgs = newValues.geometryArgs ?? prevGeometryArgsRef.current;
+          const geoType = newValues.geometryType ?? prevGeometryTypeRef.current
+          const geoArgs = newValues.geometryArgs ?? prevGeometryArgsRef.current
           const geoTypeChanged =
             'geometryType' in newValues &&
-            geoType !== prevGeometryTypeRef.current;
+            geoType !== prevGeometryTypeRef.current
           const geoArgsChanged =
             'geometryArgs' in newValues &&
             JSON.stringify(geoArgs) !==
-              JSON.stringify(prevGeometryArgsRef.current);
+              JSON.stringify(prevGeometryArgsRef.current)
 
           if (geoTypeChanged || geoArgsChanged) {
-            prevGeometryTypeRef.current = geoType;
-            prevGeometryArgsRef.current = geoArgs;
+            prevGeometryTypeRef.current = geoType
+            prevGeometryArgsRef.current = geoArgs
 
             import('./VFXParticlesDebugPanel').then(
               ({ createGeometry, GeometryType }) => {
                 if (geoType === GeometryType.NONE || !geoType) {
                   // Dispose old geometry if switching to sprite mode
                   if (activeGeometry !== null && !geometry) {
-                    activeGeometry.dispose();
+                    activeGeometry.dispose()
                   }
-                  setActiveGeometry(null);
+                  setActiveGeometry(null)
                 } else {
-                  const newGeometry = createGeometry(geoType, geoArgs);
+                  const newGeometry = createGeometry(geoType, geoArgs)
                   if (newGeometry) {
                     // Dispose old geometry if it was created by debug panel (not from props)
                     if (
                       activeGeometry !== null &&
                       activeGeometry !== geometry
                     ) {
-                      activeGeometry.dispose();
+                      activeGeometry.dispose()
                     }
-                    setActiveGeometry(newGeometry);
+                    setActiveGeometry(newGeometry)
                   }
                 }
               }
-            );
+            )
           }
         }
       },
@@ -1756,11 +1754,11 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         activeCollision,
         geometry,
       ]
-    );
+    )
 
     // Initialize debug panel once on mount if debug is enabled
     useEffect(() => {
-      if (!debug) return;
+      if (!debug) return
 
       // Initialize debug values from props
       const initialValues = {
@@ -1809,15 +1807,15 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         collision,
         // Geometry type and args - detect from passed geometry if possible
         ...detectGeometryTypeAndArgs(geometry),
-      };
+      }
 
       // Helper to detect geometry type from THREE.js geometry object
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       function detectGeometryTypeAndArgs(geo: any) {
-        if (!geo) return { geometryType: 'none', geometryArgs: null };
+        if (!geo) return { geometryType: 'none', geometryArgs: null }
 
-        const name = geo.constructor.name;
-        const params = geo.parameters || {};
+        const name = geo.constructor.name
+        const params = geo.parameters || {}
 
         switch (name) {
           case 'BoxGeometry':
@@ -1831,7 +1829,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 heightSegments: params.heightSegments ?? 1,
                 depthSegments: params.depthSegments ?? 1,
               },
-            };
+            }
           case 'SphereGeometry':
             return {
               geometryType: 'sphere',
@@ -1840,7 +1838,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 widthSegments: params.widthSegments ?? 16,
                 heightSegments: params.heightSegments ?? 12,
               },
-            };
+            }
           case 'CylinderGeometry':
             return {
               geometryType: 'cylinder',
@@ -1851,7 +1849,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 radialSegments: params.radialSegments ?? 16,
                 heightSegments: params.heightSegments ?? 1,
               },
-            };
+            }
           case 'ConeGeometry':
             return {
               geometryType: 'cone',
@@ -1861,7 +1859,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 radialSegments: params.radialSegments ?? 16,
                 heightSegments: params.heightSegments ?? 1,
               },
-            };
+            }
           case 'TorusGeometry':
             return {
               geometryType: 'torus',
@@ -1871,7 +1869,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 radialSegments: params.radialSegments ?? 12,
                 tubularSegments: params.tubularSegments ?? 24,
               },
-            };
+            }
           case 'PlaneGeometry':
             return {
               geometryType: 'plane',
@@ -1881,7 +1879,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 widthSegments: params.widthSegments ?? 1,
                 heightSegments: params.heightSegments ?? 1,
               },
-            };
+            }
           case 'CircleGeometry':
             return {
               geometryType: 'circle',
@@ -1889,7 +1887,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 radius: params.radius ?? 0.5,
                 segments: params.segments ?? 16,
               },
-            };
+            }
           case 'RingGeometry':
             return {
               geometryType: 'ring',
@@ -1898,7 +1896,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 outerRadius: params.outerRadius ?? 0.5,
                 thetaSegments: params.thetaSegments ?? 16,
               },
-            };
+            }
           case 'DodecahedronGeometry':
             return {
               geometryType: 'dodecahedron',
@@ -1906,7 +1904,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 radius: params.radius ?? 0.5,
                 detail: params.detail ?? 0,
               },
-            };
+            }
           case 'IcosahedronGeometry':
             return {
               geometryType: 'icosahedron',
@@ -1914,7 +1912,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 radius: params.radius ?? 0.5,
                 detail: params.detail ?? 0,
               },
-            };
+            }
           case 'OctahedronGeometry':
             return {
               geometryType: 'octahedron',
@@ -1922,7 +1920,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 radius: params.radius ?? 0.5,
                 detail: params.detail ?? 0,
               },
-            };
+            }
           case 'TetrahedronGeometry':
             return {
               geometryType: 'tetrahedron',
@@ -1930,7 +1928,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 radius: params.radius ?? 0.5,
                 detail: params.detail ?? 0,
               },
-            };
+            }
           case 'CapsuleGeometry':
             return {
               geometryType: 'capsule',
@@ -1940,42 +1938,42 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
                 capSegments: params.capSegments ?? 4,
                 radialSegments: params.radialSegments ?? 8,
               },
-            };
+            }
           default:
             // Unknown geometry type - show as "none" but keep the geometry
-            return { geometryType: 'none', geometryArgs: null };
+            return { geometryType: 'none', geometryArgs: null }
         }
       }
-      debugValuesRef.current = initialValues;
+      debugValuesRef.current = initialValues
       // Initialize geometry tracking refs
-      prevGeometryTypeRef.current = initialValues.geometryType;
-      prevGeometryArgsRef.current = initialValues.geometryArgs;
+      prevGeometryTypeRef.current = initialValues.geometryType
+      prevGeometryArgsRef.current = initialValues.geometryArgs
 
       // Render debug panel
       import('./VFXParticlesDebugPanel').then(({ renderDebugPanel }) => {
-        renderDebugPanel(initialValues, handleDebugUpdate);
-      });
+        renderDebugPanel(initialValues, handleDebugUpdate)
+      })
 
       return () => {
         import('./VFXParticlesDebugPanel').then(({ destroyDebugPanel }) => {
-          destroyDebugPanel();
-        });
-      };
+          destroyDebugPanel()
+        })
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debug, geometry]);
+    }, [debug, geometry])
 
     // Update debug panel callback when handleDebugUpdate changes (e.g., after state changes)
     useEffect(() => {
-      if (!debug) return;
+      if (!debug) return
       import('./VFXParticlesDebugPanel').then(({ updateDebugPanel }) => {
         if (debugValuesRef.current) {
           // Pass a NEW object copy to trigger the reference check in debug panel
-          updateDebugPanel({ ...debugValuesRef.current }, handleDebugUpdate);
+          updateDebugPanel({ ...debugValuesRef.current }, handleDebugUpdate)
         }
-      });
-    }, [debug, handleDebugUpdate]);
+      })
+    }, [debug, handleDebugUpdate])
 
     // @ts-expect-error R3F primitive element
-    return <primitive ref={spriteRef} object={renderObject} />;
+    return <primitive ref={spriteRef} object={renderObject} />
   }
-);
+)

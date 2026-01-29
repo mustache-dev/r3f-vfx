@@ -130,7 +130,9 @@ export const createSpawnCompute = (
           .mul(cosAngleVal)
           .add(crossX.mul(sinAngleVal))
           .add(kx.mul(kDotV).mul(oneMinusCos))
-        const rotatedY = localPos.y.mul(cosAngleVal).add(crossY.mul(sinAngleVal))
+        const rotatedY = localPos.y
+          .mul(cosAngleVal)
+          .add(crossY.mul(sinAngleVal))
         const rotatedZ = localPos.z
           .mul(cosAngleVal)
           .add(crossZ.mul(sinAngleVal))
@@ -151,9 +153,21 @@ export const createSpawnCompute = (
       }
 
       // BOX (shape 1): use startPosition ranges
-      const boxOffsetX = mix(uniforms.startPosMinX, uniforms.startPosMaxX, randPosX)
-      const boxOffsetY = mix(uniforms.startPosMinY, uniforms.startPosMaxY, randPosY)
-      const boxOffsetZ = mix(uniforms.startPosMinZ, uniforms.startPosMaxZ, randPosZ)
+      const boxOffsetX = mix(
+        uniforms.startPosMinX,
+        uniforms.startPosMaxX,
+        randPosX
+      )
+      const boxOffsetY = mix(
+        uniforms.startPosMinY,
+        uniforms.startPosMaxY,
+        randPosY
+      )
+      const boxOffsetZ = mix(
+        uniforms.startPosMinZ,
+        uniforms.startPosMaxZ,
+        randPosZ
+      )
       const boxPos = vec3(boxOffsetX, boxOffsetY, boxOffsetZ)
 
       // SPHERE (shape 2): spherical coordinates
@@ -213,7 +227,11 @@ export const createSpawnCompute = (
       position.assign(uniforms.spawnPosition.add(shapeOffset))
 
       // Random fade rate (needed before velocity calc for attractToCenter)
-      const randomFade = mix(uniforms.lifetimeMin, uniforms.lifetimeMax, randFade)
+      const randomFade = mix(
+        uniforms.lifetimeMin,
+        uniforms.lifetimeMax,
+        randFade
+      )
       fadeRate.assign(randomFade)
 
       // Velocity calculation
@@ -224,7 +242,8 @@ export const createSpawnCompute = (
       const attractVelocity = shapeOffset.negate().mul(randomFade)
 
       // Normal velocity: random direction * speed OR start position as direction
-      const useStartPosAsDir = uniforms.startPositionAsDirection.greaterThan(0.5)
+      const useStartPosAsDir =
+        uniforms.startPositionAsDirection.greaterThan(0.5)
 
       // Random direction (default behavior)
       const dirX = mix(uniforms.dirMinX, uniforms.dirMaxX, randDirX)
@@ -249,7 +268,9 @@ export const createSpawnCompute = (
       const normalVelocity = dir.mul(randomSpeed)
 
       // Select velocity mode
-      velocity.assign(useAttractToCenter.select(attractVelocity, normalVelocity))
+      velocity.assign(
+        useAttractToCenter.select(attractVelocity, normalVelocity)
+      )
 
       // Random size between min and max
       const randomSize = mix(uniforms.sizeMin, uniforms.sizeMax, randSize)
@@ -257,15 +278,29 @@ export const createSpawnCompute = (
 
       // Random 3D rotation between min and max for each axis (only if rotation array exists)
       if (particleRotation) {
-        const rotX = mix(uniforms.rotationMinX, uniforms.rotationMaxX, randRotationX)
-        const rotY = mix(uniforms.rotationMinY, uniforms.rotationMaxY, randRotationY)
-        const rotZ = mix(uniforms.rotationMinZ, uniforms.rotationMaxZ, randRotationZ)
+        const rotX = mix(
+          uniforms.rotationMinX,
+          uniforms.rotationMaxX,
+          randRotationX
+        )
+        const rotY = mix(
+          uniforms.rotationMinY,
+          uniforms.rotationMaxY,
+          randRotationY
+        )
+        const rotZ = mix(
+          uniforms.rotationMinZ,
+          uniforms.rotationMaxZ,
+          randRotationZ
+        )
         particleRotation.assign(vec3(rotX, rotY, rotZ))
       }
 
       // Pick random start/end colors only if per-particle color arrays exist
       if (pColorStart && pColorEnd) {
-        const startColorIdx = floor(randColorStart.mul(uniforms.colorStartCount))
+        const startColorIdx = floor(
+          randColorStart.mul(uniforms.colorStartCount)
+        )
         const selectedStartColor = selectColor(
           startColorIdx,
           uniforms.colorStart0,

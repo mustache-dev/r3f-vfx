@@ -8,11 +8,11 @@ Source: https://sketchfab.com/3d-models/sword1-5ca73c3167c74bfbb123f8bb86d56e5b
 Title: Sword1
 */
 
-import React from 'react';
-import { useGLTF } from '@react-three/drei';
+import React from 'react'
+import { useGLTF } from '@react-three/drei'
 
 export function Model(props) {
-  const { nodes, materials } = useGLTF('/sword1-transformed.glb');
+  const { nodes, materials } = useGLTF('/sword1-transformed.glb')
   return (
     <group {...props} dispose={null}>
       <mesh
@@ -28,7 +28,7 @@ export function Model(props) {
         scale={1.357}
       />
     </group>
-  );
+  )
 }
 
-useGLTF.preload('/sword1-transformed.glb');
+useGLTF.preload('/sword1-transformed.glb')
