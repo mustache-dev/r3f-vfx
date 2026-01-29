@@ -1,5 +1,13 @@
 # r3f-vfx
 
+## 0.1.4
+
+### Patch Changes
+
+- b6550da: bug fix related to the curve texture not being loaded properly
+- Updated dependencies [b6550da]
+  - core-vfx@0.0.7
+
 ## 0.1.3
 
 ### Patch Changes

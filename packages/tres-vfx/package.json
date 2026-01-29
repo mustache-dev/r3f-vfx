@@ -1,6 +1,6 @@
 {
   "name": "tres-vfx",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -24,7 +24,7 @@
     "prepublishOnly": "bun run typecheck && bun run build && bun run copy-readme"
   },
   "dependencies": {
-    "core-vfx": "0.0.6"
+    "core-vfx": "0.0.7"
   },
   "devDependencies": {
     "tsup": "8.5.1",

@@ -1,5 +1,13 @@
 # tres-vfx
 
+## 0.0.7
+
+### Patch Changes
+
+- b6550da: bug fix related to the curve texture not being loaded properly
+- Updated dependencies [b6550da]
+  - core-vfx@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes
