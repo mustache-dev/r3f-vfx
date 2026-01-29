@@ -12,7 +12,7 @@
     "dev:r3f:example": "bun run -F r3f-example dev",
     "typecheck": "bun run -F '*' typecheck",
     "start": "bun run -F r3f-example start",
-    "build": "run-s build:r3f:library",
+    "build": "run-s build:core build:r3f:library",
     "build:core": "bun run -F core-vfx build",
     "build:r3f:library": "bun run -F r3f-vfx build",
     "format": "prettier . --write",

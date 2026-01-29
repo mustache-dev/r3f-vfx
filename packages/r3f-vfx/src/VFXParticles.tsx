@@ -47,7 +47,11 @@ export {
   Lighting,
   bakeCurveToArray,
   createCombinedCurveTexture,
+  buildCurveTextureBin,
+  CurveChannel,
 } from 'core-vfx'
+
+export type { CurveTextureResult } from 'core-vfx'
 
 export type VFXParticlesProps = {
   /** Optional name for registering with useVFXStore (enables VFXEmitter linking) */
@@ -388,9 +392,15 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
 
     // Create combined curve texture for GPU sampling (use active curves for debug mode)
     // R = size, G = opacity, B = velocity, A = rotation speed
-    // If curveTexturePath is provided, loads pre-baked texture (instant)
+    // If curveTexturePath is provided, loads pre-baked texture (only active channels override)
     // Otherwise, bakes curves synchronously on the main thread
-    const curveTexture = useCurveTextureAsync(
+    const {
+      texture: curveTexture,
+      sizeEnabled: curveTextureSizeEnabled,
+      opacityEnabled: curveTextureOpacityEnabled,
+      velocityEnabled: curveTextureVelocityEnabled,
+      rotationSpeedEnabled: curveTextureRotationSpeedEnabled,
+    } = useCurveTextureAsync(
       activeFadeSizeCurve,
       activeFadeOpacityCurve,
       activeVelocityCurve,
@@ -398,17 +408,6 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
       curveTexturePath
     )
 
-    // Note: curveTexture is managed by useCurveTextureAsync hook, no manual disposal needed here
-    const prevCurveTextureRef = useRef<THREE.DataTexture | null>(null)
-    useEffect(() => {
-      prevCurveTextureRef.current = curveTexture
-
-      return () => {
-        if (curveTexture) {
-          curveTexture.dispose()
-        }
-      }
-    }, [curveTexture])
     const lifetimeRange = useMemo(() => toRange(lifetime, [1, 2]), [lifetime])
     const rotation3D = useMemo(() => toRotation3D(rotation), [rotation])
     const rotationSpeed3D = useMemo(
@@ -605,23 +604,11 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
         // Soft particles
         softParticlesEnabled: uniform(softParticles ? 1 : 0),
         softDistance: uniform(softDistance),
-        // Velocity curve (replaces friction when enabled)
-        // Enable if velocityCurve prop is set OR curveTexturePath is provided
-        velocityCurveEnabled: uniform(
-          velocityCurve || curveTexturePath ? 1 : 0
-        ),
-        // Rotation speed curve (modulates rotation speed over lifetime)
-        rotationSpeedCurveEnabled: uniform(
-          rotationSpeedCurve || curveTexturePath ? 1 : 0
-        ),
-        // Fade size curve (when disabled, uses fadeSize prop interpolation)
-        fadeSizeCurveEnabled: uniform(
-          fadeSizeCurve || curveTexturePath ? 1 : 0
-        ),
-        // Fade opacity curve (when disabled, uses fadeOpacity prop interpolation)
-        fadeOpacityCurveEnabled: uniform(
-          fadeOpacityCurve || curveTexturePath ? 1 : 0
-        ),
+        // Curve enabled flags (set by useCurveTextureAsync per-channel info)
+        velocityCurveEnabled: uniform(0),
+        rotationSpeedCurveEnabled: uniform(0),
+        fadeSizeCurveEnabled: uniform(0),
+        fadeOpacityCurveEnabled: uniform(0),
         // Orient axis: 0=+X, 1=+Y, 2=+Z, 3=-X, 4=-Y, 5=-Z
         orientAxisType: uniform(axisToNumber(orientAxis)),
         // Stretch by speed (uses effective velocity after curve modifier)
@@ -774,22 +761,14 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
       uniforms.softParticlesEnabled.value = softParticles ? 1 : 0
       uniforms.softDistance.value = softDistance
 
-      // Velocity curve (when enabled, overrides friction)
-      // Enable if velocityCurve prop is set OR curveTexturePath is provided
-      uniforms.velocityCurveEnabled.value =
-        velocityCurve || curveTexturePath ? 1 : 0
-
-      // Rotation speed curve
+      // Curve enabled flags (driven by useCurveTextureAsync per-channel info)
+      uniforms.velocityCurveEnabled.value = curveTextureVelocityEnabled ? 1 : 0
       uniforms.rotationSpeedCurveEnabled.value =
-        rotationSpeedCurve || curveTexturePath ? 1 : 0
-
-      // Fade size curve (when enabled, uses curve instead of fadeSize prop)
-      uniforms.fadeSizeCurveEnabled.value =
-        fadeSizeCurve || curveTexturePath ? 1 : 0
-
-      // Fade opacity curve (when enabled, uses curve instead of fadeOpacity prop)
-      uniforms.fadeOpacityCurveEnabled.value =
-        fadeOpacityCurve || curveTexturePath ? 1 : 0
+        curveTextureRotationSpeedEnabled ? 1 : 0
+      uniforms.fadeSizeCurveEnabled.value = curveTextureSizeEnabled ? 1 : 0
+      uniforms.fadeOpacityCurveEnabled.value = curveTextureOpacityEnabled
+        ? 1
+        : 0
 
       // Orient axis
       uniforms.orientAxisType.value = axisToNumber(orientAxis)
@@ -840,11 +819,10 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
       startPositionAsDirection,
       softParticles,
       softDistance,
-      velocityCurve,
-      rotationSpeedCurve,
-      fadeSizeCurve,
-      fadeOpacityCurve,
-      curveTexturePath,
+      curveTextureVelocityEnabled,
+      curveTextureRotationSpeedEnabled,
+      curveTextureSizeEnabled,
+      curveTextureOpacityEnabled,
       orientAxis,
       stretchBySpeed,
     ])

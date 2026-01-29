@@ -2,6 +2,27 @@ import * as THREE from 'three/webgpu'
 import { CURVE_RESOLUTION } from './constants'
 import type { CurveData, CurvePoint } from './types'
 
+/**
+ * Channel bitmask for curve texture .bin files.
+ * Indicates which RGBA channels contain active curve data.
+ */
+export const CurveChannel = {
+  SIZE: 1, // R channel - fadeSizeCurve
+  OPACITY: 2, // G channel - fadeOpacityCurve
+  VELOCITY: 4, // B channel - velocityCurve
+  ROTATION_SPEED: 8, // A channel - rotationSpeedCurve
+} as const
+
+/** Result from loading a .bin curve texture file */
+export type CurveTextureResult = {
+  texture: THREE.DataTexture
+  /** Bitmask of active channels (CurveChannel flags) */
+  activeChannels: number
+}
+
+// Magic number for the new .bin format header (arbitrary recognizable float)
+const CURVE_BIN_MAGIC = 1178944512 // 'VFX\0' as float32
+
 // Evaluate cubic bezier between two points with handles
 export const evaluateBezierSegment = (
   t: number,
@@ -213,33 +234,86 @@ export const createDefaultCurveTexture = (): THREE.DataTexture => {
   return tex
 }
 
-// Load a pre-baked curve texture from a binary file
+/**
+ * Build a .bin file ArrayBuffer for curve texture export.
+ * Format: [magic, channelMask, reserved, reserved, ...RGBA data (256*4 floats)]
+ * Only active channels contain baked curve data; inactive channels get default 1→0.
+ */
+export const buildCurveTextureBin = (
+  sizeCurve: CurveData | null,
+  opacityCurve: CurveData | null,
+  velocityCurve: CurveData | null,
+  rotationSpeedCurve: CurveData | null
+): ArrayBuffer => {
+  let channelMask = 0
+  if (sizeCurve) channelMask |= CurveChannel.SIZE
+  if (opacityCurve) channelMask |= CurveChannel.OPACITY
+  if (velocityCurve) channelMask |= CurveChannel.VELOCITY
+  if (rotationSpeedCurve) channelMask |= CurveChannel.ROTATION_SPEED
+
+  const sizeData = bakeCurveToArray(sizeCurve as CurveData)
+  const opacityData = bakeCurveToArray(opacityCurve as CurveData)
+  const velocityData = bakeCurveToArray(velocityCurve as CurveData)
+  const rotationSpeedData = bakeCurveToArray(rotationSpeedCurve as CurveData)
+
+  // Header: 4 floats + RGBA data: 256*4 floats
+  const headerSize = 4
+  const data = new Float32Array(headerSize + CURVE_RESOLUTION * 4)
+  data[0] = CURVE_BIN_MAGIC
+  data[1] = channelMask
+  data[2] = 0 // reserved
+  data[3] = 0 // reserved
+
+  for (let i = 0; i < CURVE_RESOLUTION; i++) {
+    data[headerSize + i * 4] = sizeData[i]
+    data[headerSize + i * 4 + 1] = opacityData[i]
+    data[headerSize + i * 4 + 2] = velocityData[i]
+    data[headerSize + i * 4 + 3] = rotationSpeedData[i]
+  }
+
+  return data.buffer
+}
+
+/**
+ * Load a pre-baked curve texture from a .bin file.
+ * Supports both old format (raw 256*4 floats, all channels active)
+ * and new format (4-float header + 256*4 floats with channel bitmask).
+ */
 export const loadCurveTextureFromPath = async (
-  path: string,
-  existingTexture?: THREE.DataTexture
-): Promise<THREE.DataTexture> => {
+  path: string
+): Promise<CurveTextureResult> => {
   const response = await fetch(path)
   if (!response.ok) {
     throw new Error(`Failed to load curve texture: HTTP ${response.status}`)
   }
 
   const buffer = await response.arrayBuffer()
-  const rgba = new Float32Array(buffer)
+  const allFloats = new Float32Array(buffer)
 
-  if (rgba.length !== CURVE_RESOLUTION * 4) {
+  let rgba: Float32Array
+  let activeChannels: number
+
+  const newFormatSize = 4 + CURVE_RESOLUTION * 4 // header + data
+  const oldFormatSize = CURVE_RESOLUTION * 4 // data only
+
+  if (allFloats.length === newFormatSize && allFloats[0] === CURVE_BIN_MAGIC) {
+    // New format: header with channel bitmask
+    activeChannels = allFloats[1]
+    rgba = allFloats.slice(4)
+  } else if (allFloats.length === oldFormatSize) {
+    // Old format: raw RGBA data, assume all channels active
+    activeChannels =
+      CurveChannel.SIZE |
+      CurveChannel.OPACITY |
+      CurveChannel.VELOCITY |
+      CurveChannel.ROTATION_SPEED
+    rgba = allFloats
+  } else {
     throw new Error(
-      `Invalid curve texture size: expected ${CURVE_RESOLUTION * 4}, got ${rgba.length}`
+      `Invalid curve texture size: got ${allFloats.length} floats`
     )
   }
 
-  // If existing texture provided, update it in place (avoids shader recompilation)
-  if (existingTexture && existingTexture.image.data) {
-    existingTexture.image.data.set(rgba)
-    existingTexture.needsUpdate = true
-    return existingTexture
-  }
-
-  // Create new texture
   const tex = new THREE.DataTexture(
     rgba,
     CURVE_RESOLUTION,
@@ -251,5 +325,6 @@ export const loadCurveTextureFromPath = async (
   tex.magFilter = THREE.LinearFilter
   tex.wrapS = THREE.ClampToEdgeWrapping
   tex.needsUpdate = true
-  return tex
+
+  return { texture: tex, activeChannels }
 }

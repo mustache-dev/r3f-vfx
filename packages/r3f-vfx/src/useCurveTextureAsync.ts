@@ -1,19 +1,31 @@
-import { useRef, useEffect, useMemo } from 'react'
+import { useRef, useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three/webgpu'
 import {
   createDefaultCurveTexture,
   createCombinedCurveTexture,
   loadCurveTextureFromPath,
+  CurveChannel,
   type CurveData,
 } from 'core-vfx'
 
+export type CurveTextureHookResult = {
+  texture: THREE.DataTexture
+  /** Per-channel enabled state, combining curve props and loaded .bin channels */
+  sizeEnabled: boolean
+  opacityEnabled: boolean
+  velocityEnabled: boolean
+  rotationSpeedEnabled: boolean
+}
+
 /**
- * Hook for curve texture loading/baking
- * Returns a STABLE texture reference that updates in place
+ * Hook for curve texture loading/baking.
  *
- * If curveTexturePath is provided, loads pre-baked texture from file
- * If curves are defined, bakes them synchronously on the main thread
- * If no curves AND no path, returns default texture (no baking needed)
+ * If curveTexturePath is provided, loads pre-baked texture from file.
+ * The .bin file contains a header with a bitmask of which channels are active.
+ * Only those channels override the curve props; the rest use curve props or defaults.
+ *
+ * If curves are defined (no path), bakes them synchronously on the main thread.
+ * If no curves AND no path, returns default texture (no baking needed).
  */
 export const useCurveTextureAsync = (
   sizeCurve: CurveData | null,
@@ -21,76 +33,82 @@ export const useCurveTextureAsync = (
   velocityCurve: CurveData | null,
   rotationSpeedCurve: CurveData | null,
   curveTexturePath: string | null = null
-): THREE.DataTexture => {
+): CurveTextureHookResult => {
   const hasAnyCurve =
     sizeCurve || opacityCurve || velocityCurve || rotationSpeedCurve
 
-  // Create texture with baked curve data synchronously during render.
-  // This ensures the texture has the correct data before downstream useMemo
-  // hooks (createUpdateCompute, createParticleMaterial) consume it.
-  const textureRef = useRef<THREE.DataTexture | null>(null)
-  if (!textureRef.current) {
+  // Synchronous path: bake curves during render so texture is ready immediately
+  const texture = useMemo(() => {
     if (!curveTexturePath && hasAnyCurve) {
-      // Bake curves directly into the initial texture
-      textureRef.current = createCombinedCurveTexture(
+      return createCombinedCurveTexture(
         sizeCurve as CurveData,
         opacityCurve as CurveData,
         velocityCurve as CurveData,
         rotationSpeedCurve as CurveData
       )
-    } else {
-      // Default linear 1→0 fallback (curveTexturePath will update it async)
-      textureRef.current = createDefaultCurveTexture()
     }
-  }
-
-  // Re-bake synchronously when curve props change after initial mount
-  useMemo(() => {
-    if (!curveTexturePath && hasAnyCurve && textureRef.current) {
-      const bakedTexture = createCombinedCurveTexture(
-        sizeCurve as CurveData,
-        opacityCurve as CurveData,
-        velocityCurve as CurveData,
-        rotationSpeedCurve as CurveData
-      )
-      const srcData = bakedTexture.image.data as Float32Array | null
-      const dstData = textureRef.current.image.data as Float32Array | null
-      if (srcData && dstData) {
-        dstData.set(srcData)
-        textureRef.current.needsUpdate = true
-      }
-      bakedTexture.dispose()
-    }
+    return createDefaultCurveTexture()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sizeCurve, opacityCurve, velocityCurve, rotationSpeedCurve])
+  }, [
+    sizeCurve,
+    opacityCurve,
+    velocityCurve,
+    rotationSpeedCurve,
+    curveTexturePath,
+    hasAnyCurve,
+  ])
 
-  // Load pre-baked texture from path (requires async fetch)
+  // Async path: load pre-baked texture from file, then replace via state
+  const [loadedTexture, setLoadedTexture] = useState<THREE.DataTexture | null>(
+    null
+  )
+  const [loadedChannels, setLoadedChannels] = useState<number>(0)
+
   useEffect(() => {
-    if (!curveTexturePath || !textureRef.current) return
+    if (!curveTexturePath) {
+      setLoadedTexture(null)
+      setLoadedChannels(0)
+      return
+    }
 
-    loadCurveTextureFromPath(curveTexturePath, textureRef.current).catch(
-      (err) => {
+    let cancelled = false
+
+    loadCurveTextureFromPath(curveTexturePath)
+      .then((result) => {
+        if (!cancelled) {
+          setLoadedTexture(result.texture)
+          setLoadedChannels(result.activeChannels)
+        } else {
+          result.texture.dispose()
+        }
+      })
+      .catch((err) => {
         console.warn(
           `Failed to load curve texture: ${curveTexturePath}, falling back to baking`,
           err
         )
-        if (hasAnyCurve && textureRef.current) {
-          const bakedTexture = createCombinedCurveTexture(
-            sizeCurve as CurveData,
-            opacityCurve as CurveData,
-            velocityCurve as CurveData,
-            rotationSpeedCurve as CurveData
+        if (!cancelled && hasAnyCurve) {
+          setLoadedTexture(
+            createCombinedCurveTexture(
+              sizeCurve as CurveData,
+              opacityCurve as CurveData,
+              velocityCurve as CurveData,
+              rotationSpeedCurve as CurveData
+            )
           )
-          const srcData = bakedTexture.image.data as Float32Array | null
-          const dstData = textureRef.current.image.data as Float32Array | null
-          if (srcData && dstData) {
-            dstData.set(srcData)
-            textureRef.current.needsUpdate = true
-          }
-          bakedTexture.dispose()
+          // Fallback: enable only channels that have curve props
+          let mask = 0
+          if (sizeCurve) mask |= CurveChannel.SIZE
+          if (opacityCurve) mask |= CurveChannel.OPACITY
+          if (velocityCurve) mask |= CurveChannel.VELOCITY
+          if (rotationSpeedCurve) mask |= CurveChannel.ROTATION_SPEED
+          setLoadedChannels(mask)
         }
-      }
-    )
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [
     curveTexturePath,
     sizeCurve,
@@ -100,15 +118,50 @@ export const useCurveTextureAsync = (
     hasAnyCurve,
   ])
 
+  // Use loaded texture if available, otherwise use synchronously baked one
+  const activeTexture = loadedTexture ?? texture
+
+  // Determine per-channel enabled state:
+  // - If curveTexturePath loaded: use loaded channel bitmask
+  // - Otherwise: use curve prop presence
+  const sizeEnabled = loadedTexture
+    ? !!(loadedChannels & CurveChannel.SIZE)
+    : !!sizeCurve
+  const opacityEnabled = loadedTexture
+    ? !!(loadedChannels & CurveChannel.OPACITY)
+    : !!opacityCurve
+  const velocityEnabled = loadedTexture
+    ? !!(loadedChannels & CurveChannel.VELOCITY)
+    : !!velocityCurve
+  const rotationSpeedEnabled = loadedTexture
+    ? !!(loadedChannels & CurveChannel.ROTATION_SPEED)
+    : !!rotationSpeedCurve
+
+  // Dispose old textures when they change
+  const prevTextureRef = useRef<THREE.DataTexture | null>(null)
+  useEffect(() => {
+    const prev = prevTextureRef.current
+    if (prev && prev !== activeTexture) {
+      prev.dispose()
+    }
+    prevTextureRef.current = activeTexture
+  }, [activeTexture])
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      textureRef.current?.dispose()
-      textureRef.current = null
+      prevTextureRef.current?.dispose()
+      prevTextureRef.current = null
     }
   }, [])
 
-  return textureRef.current!
+  return {
+    texture: activeTexture,
+    sizeEnabled,
+    opacityEnabled,
+    velocityEnabled,
+    rotationSpeedEnabled,
+  }
 }
 
 export default useCurveTextureAsync

@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Appearance, Blending, EmitterShape, Lighting } from './VFXParticles'
+import { buildCurveTextureBin } from 'core-vfx'
 import * as THREE from 'three'
 import { create } from 'zustand'
 
@@ -3685,130 +3686,22 @@ const DebugPanelContent = ({ initialValues, onUpdate }) => {
     }
 
     const values = valuesRef.current
-    const CURVE_RESOLUTION = 256
 
-    const evaluateBezierSegment = (t, p0, p1, h0Out, h1In) => {
-      const cp0 = p0
-      const cp1 = [p0[0] + (h0Out?.[0] || 0), p0[1] + (h0Out?.[1] || 0)]
-      const cp2 = [p1[0] + (h1In?.[0] || 0), p1[1] + (h1In?.[1] || 0)]
-      const cp3 = p1
-      const mt = 1 - t
-      const mt2 = mt * mt
-      const mt3 = mt2 * mt
-      const t2 = t * t
-      const t3 = t2 * t
-      return [
-        mt3 * cp0[0] +
-          3 * mt2 * t * cp1[0] +
-          3 * mt * t2 * cp2[0] +
-          t3 * cp3[0],
-        mt3 * cp0[1] +
-          3 * mt2 * t * cp1[1] +
-          3 * mt * t2 * cp2[1] +
-          t3 * cp3[1],
-      ]
-    }
-
-    const sampleCurveAtX = (x, points) => {
-      if (!points || points.length < 2) return x
-      if (!points[0]?.pos || !points[points.length - 1]?.pos) return x
-      let segmentIdx = 0
-      for (let i = 0; i < points.length - 1; i++) {
-        if (
-          points[i]?.pos &&
-          points[i + 1]?.pos &&
-          x >= points[i].pos[0] &&
-          x <= points[i + 1].pos[0]
-        ) {
-          segmentIdx = i
-          break
-        }
-      }
-      const p0 = points[segmentIdx]
-      const p1 = points[segmentIdx + 1]
-      if (!p0?.pos || !p1?.pos) return x
-      let tLow = 0,
-        tHigh = 1,
-        t = 0.5
-      for (let iter = 0; iter < 20; iter++) {
-        const [px] = evaluateBezierSegment(
-          t,
-          p0.pos,
-          p1.pos,
-          p0.handleOut,
-          p1.handleIn
-        )
-        if (Math.abs(px - x) < 0.0001) break
-        if (px < x) {
-          tLow = t
-        } else {
-          tHigh = t
-        }
-        t = (tLow + tHigh) / 2
-      }
-      const [, py] = evaluateBezierSegment(
-        t,
-        p0.pos,
-        p1.pos,
-        p0.handleOut,
-        p1.handleIn
-      )
-      return Math.max(-0.5, Math.min(1.5, py))
-    }
-
-    const bakeCurveToArray = (curveData) => {
-      const data = new Float32Array(CURVE_RESOLUTION)
-      if (
-        !curveData?.points ||
-        !Array.isArray(curveData.points) ||
-        curveData.points.length < 2
-      ) {
-        for (let i = 0; i < CURVE_RESOLUTION; i++) {
-          data[i] = 1 - i / (CURVE_RESOLUTION - 1)
-        }
-        return data
-      }
-      const firstPoint = curveData.points[0]
-      const lastPoint = curveData.points[curveData.points.length - 1]
-      if (
-        !firstPoint?.pos ||
-        !lastPoint?.pos ||
-        !Array.isArray(firstPoint.pos) ||
-        !Array.isArray(lastPoint.pos)
-      ) {
-        for (let i = 0; i < CURVE_RESOLUTION; i++) {
-          data[i] = 1 - i / (CURVE_RESOLUTION - 1)
-        }
-        return data
-      }
-      for (let i = 0; i < CURVE_RESOLUTION; i++) {
-        const x = i / (CURVE_RESOLUTION - 1)
-        data[i] = sampleCurveAtX(x, curveData.points)
-      }
-      return data
-    }
-
-    // Bake all 4 curves
-    const sizeData = bakeCurveToArray(values.fadeSizeCurve)
-    const opacityData = bakeCurveToArray(values.fadeOpacityCurve)
-    const velocityData = bakeCurveToArray(values.velocityCurve)
-    const rotationSpeedData = bakeCurveToArray(values.rotationSpeedCurve)
-
-    // Combine into RGBA Float32Array
-    const rgba = new Float32Array(CURVE_RESOLUTION * 4)
-    for (let i = 0; i < CURVE_RESOLUTION; i++) {
-      rgba[i * 4] = sizeData[i]
-      rgba[i * 4 + 1] = opacityData[i]
-      rgba[i * 4 + 2] = velocityData[i]
-      rgba[i * 4 + 3] = rotationSpeedData[i]
-    }
+    // Build .bin with header containing channel bitmask
+    // Only curves that are set (non-null) are marked as active
+    const binBuffer = buildCurveTextureBin(
+      values.fadeSizeCurve || null,
+      values.fadeOpacityCurve || null,
+      values.velocityCurve || null,
+      values.rotationSpeedCurve || null
+    )
 
     // Generate filename from VFX name or timestamp
     const vfxName = values.name || `vfx-curves-${Date.now()}`
     const filename = `${vfxName.replace(/[^a-zA-Z0-9-_]/g, '-')}.bin`
 
-    // Export as raw binary .bin file (full float precision, 4KB)
-    const blob = new Blob([rgba.buffer], { type: 'application/octet-stream' })
+    // Export as binary .bin file with header
+    const blob = new Blob([binBuffer], { type: 'application/octet-stream' })
     const link = document.createElement('a')
     link.download = filename
     link.href = URL.createObjectURL(blob)

@@ -45,8 +45,12 @@ export {
   createCombinedCurveTexture,
   createDefaultCurveTexture,
   loadCurveTextureFromPath,
+  buildCurveTextureBin,
+  CurveChannel,
   DEFAULT_LINEAR_CURVE,
 } from './curves'
+
+export type { CurveTextureResult } from './curves'
 
 // Shader factories
 export {
