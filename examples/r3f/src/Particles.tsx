@@ -58,7 +58,7 @@ import {
   normalViewGeometry,
   color,
 } from 'three/tsl';
-
+//console.log('push for vercel')
 export const Particles = () => {
   // const swordParticlesRef = useRef();
   const smokeTexture = new TextureLoader().load('./2.png');
