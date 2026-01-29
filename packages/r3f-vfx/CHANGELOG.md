@@ -1,11 +1,5 @@
 # r3f-vfx
 
-## 0.0.10
-
-### Patch Changes
-
-- b3b9a6c: Add missing methods to useVFXStore (getState, setState, subscribe, getInitialState)
-
 ## 0.0.9
 
 ### Patch Changes
