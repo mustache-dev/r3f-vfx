@@ -389,7 +389,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
     // Create combined curve texture for GPU sampling (use active curves for debug mode)
     // R = size, G = opacity, B = velocity, A = rotation speed
     // If curveTexturePath is provided, loads pre-baked texture (instant)
-    // Otherwise, bakes curves in web worker (slower but flexible)
+    // Otherwise, bakes curves synchronously on the main thread
     const curveTexture = useCurveTextureAsync(
       activeFadeSizeCurve,
       activeFadeOpacityCurve,

@@ -639,7 +639,13 @@ export const Particles = () => {
   emitterDirection={[0, 1, 0]}
 /> */}
       {/* Curve Baking Demo - Shows fadeSizeCurve and velocityCurve features */}
-      <VFXParticles debug />
+      <VFXParticles
+        curveTexturePath={'/vfx-curve.bin'}
+        speed={[2.34, 2.34]}
+        appearance="gradient"
+        lighting="standard"
+        emitterShape={1}
+      />
       {/* <VFXParticles
         // debug={true}
         autoStart={true}
