@@ -1,6 +1,6 @@
 {
   "name": "threlte-vfx",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -24,7 +24,7 @@
     "prepublishOnly": "bun run typecheck && bun run build && bun run copy-readme"
   },
   "dependencies": {
-    "core-vfx": "0.0.9"
+    "core-vfx": "0.0.10"
   },
   "devDependencies": {
     "tsup": "8.5.1",

@@ -1,5 +1,13 @@
 # debug-vfx
 
+## 0.0.10
+
+### Patch Changes
+
+- cecc8f3: Fix type
+- Updated dependencies [cecc8f3]
+  - core-vfx@0.0.10
+
 ## 0.0.9
 
 ### Patch Changes
