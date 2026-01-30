@@ -7,8 +7,8 @@ import { WebGPUPostProcessing } from './WebGPUPostprocessing'
 import { WobblySphere } from './WobblySphere'
 import { Floor } from './Floor'
 import Player from './Player'
-import { Particles } from './Particles'
-import { Spark } from './Spark'
+import { Boom } from './Boom'
+// import { Particles } from './Particles'
 
 const keyboardMap = [
   { name: 'forward', keys: ['ArrowUp', 'KeyW'] },
@@ -22,28 +22,23 @@ const keyboardMap = [
 export default function App() {
   return (
     <>
-      <KeyboardControls map={keyboardMap}>
-        <Canvas
-          shadows
-          gl={async (props) => {
-            extend(THREE)
-            const renderer = new THREE.WebGPURenderer(props)
 
-            await renderer.init()
-            return renderer
-          }}
-        >
-          <Suspense fallback={null}>
-            <SceneLight />
-            <WebGPUPostProcessing />
-            <Floor />
+      <Canvas
+        shadows
+        renderer
+      >
+        <Suspense fallback={null}>
+          <SceneLight />
+          <WebGPUPostProcessing />
+          <Floor />
+          <KeyboardControls map={keyboardMap}>
             <Player />
-            <Spark />
-            <Particles />
-            {/* <WobblySphere/> */}
-          </Suspense>
-        </Canvas>
-      </KeyboardControls>
+          </KeyboardControls>
+          <Boom />
+          {/* <Particles /> */}
+          {/* <WobblySphere/> */}
+        </Suspense>
+      </Canvas>
 
       <Loader />
     </>

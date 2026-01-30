@@ -4,13 +4,6 @@ import { useRef } from 'react'
 import { damp } from 'three/src/math/MathUtils.js'
 import { Vector3 } from 'three/webgpu'
 import { Model } from './Witch-test'
-import {
-  Appearance,
-  VFXParticles,
-  Blending,
-  useVFXEmitter,
-  VFXEmitter,
-} from 'r3f-vfx'
 
 function Player() {
   const meshRef = useRef()

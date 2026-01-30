@@ -1075,6 +1075,41 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
           setUniform('rotationMinZ', rot3D[2][0])
           setUniform('rotationMaxZ', rot3D[2][1])
         }
+     if (overrides.emitterShape !== undefined) {
+          setUniform('emitterShapeType', overrides.emitterShape)
+        }
+
+        // Emitter radius: number or [inner, outer]
+        if (overrides.emitterRadius !== undefined) {
+          const range = toRange(overrides.emitterRadius, [0, 1])
+          setUniform('emitterRadiusInner', range[0])
+          setUniform('emitterRadiusOuter', range[1])
+        }
+
+        // Emitter angle (for cone shape)
+        if (overrides.emitterAngle !== undefined) {
+          setUniform('emitterAngle', overrides.emitterAngle)
+        }
+
+        // Emitter height: number or [min, max] (for cone shape)
+        if (overrides.emitterHeight !== undefined) {
+          const range = toRange(overrides.emitterHeight, [0, 1])
+          setUniform('emitterHeightMin', range[0])
+          setUniform('emitterHeightMax', range[1])
+        }
+
+        // Emitter surface only
+        if (overrides.emitterSurfaceOnly !== undefined) {
+          setUniform('emitterSurfaceOnly', overrides.emitterSurfaceOnly ? 1 : 0)
+        }
+
+        // Emitter direction
+        if (overrides.emitterDirection !== undefined) {
+          saved.emitterDir = uniforms.emitterDir.value.clone()
+          uniforms.emitterDir.value
+            .set(...(overrides.emitterDirection as [number, number, number]))
+            .normalize()
+        }
 
         // Return restore function
         return () => {
