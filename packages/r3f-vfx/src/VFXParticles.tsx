@@ -1075,7 +1075,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
           setUniform('rotationMinZ', rot3D[2][0])
           setUniform('rotationMaxZ', rot3D[2][1])
         }
-     if (overrides.emitterShape !== undefined) {
+        if (overrides.emitterShape !== undefined) {
           setUniform('emitterShapeType', overrides.emitterShape)
         }
 
@@ -1981,6 +1981,7 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
       })
     }, [debug, handleDebugUpdate])
 
+    // @ts-expect-error
     return <primitive ref={spriteRef} object={renderObject} />
   }
 )
