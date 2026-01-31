@@ -2,8 +2,16 @@ import { createRoot } from 'react-dom/client'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Appearance, Blending, EmitterShape, Lighting } from 'core-vfx'
 import { buildCurveTextureBin } from 'core-vfx'
-import * as THREE from 'three'
 import { create } from 'zustand'
+import { GeometryType, geometryDefaults } from './geometry'
+import { generateVFXParticlesJSX, generateVanillaCode } from './code-generation'
+import { wrapped, styles } from './styles'
+
+export {
+  GeometryType,
+  createGeometry,
+  detectGeometryTypeAndArgs,
+} from './geometry'
 
 // Minimal Zustand store - holds flushChanges ref without causing re-renders
 const useDebugPanelStore = create(() => ({
@@ -15,78 +23,6 @@ const getFlushChanges = () =>
   useDebugPanelStore.getState().flushChangesRef.current
 const setFlushChanges = (fn) => {
   useDebugPanelStore.getState().flushChangesRef.current = fn
-}
-
-// Geometry types for the debug panel
-export const GeometryType = Object.freeze({
-  NONE: 'none', // Sprite mode (no geometry)
-  BOX: 'box',
-  SPHERE: 'sphere',
-  CYLINDER: 'cylinder',
-  CONE: 'cone',
-  TORUS: 'torus',
-  PLANE: 'plane',
-  CIRCLE: 'circle',
-  RING: 'ring',
-  DODECAHEDRON: 'dodecahedron',
-  ICOSAHEDRON: 'icosahedron',
-  OCTAHEDRON: 'octahedron',
-  TETRAHEDRON: 'tetrahedron',
-  CAPSULE: 'capsule',
-})
-
-// Default arguments for each geometry type
-const geometryDefaults = {
-  [GeometryType.BOX]: {
-    width: 1,
-    height: 1,
-    depth: 1,
-    widthSegments: 1,
-    heightSegments: 1,
-    depthSegments: 1,
-  },
-  [GeometryType.SPHERE]: { radius: 0.5, widthSegments: 16, heightSegments: 12 },
-  [GeometryType.CYLINDER]: {
-    radiusTop: 0.5,
-    radiusBottom: 0.5,
-    height: 1,
-    radialSegments: 16,
-    heightSegments: 1,
-  },
-  [GeometryType.CONE]: {
-    radius: 0.5,
-    height: 1,
-    radialSegments: 16,
-    heightSegments: 1,
-  },
-  [GeometryType.TORUS]: {
-    radius: 0.5,
-    tube: 0.2,
-    radialSegments: 12,
-    tubularSegments: 24,
-  },
-  [GeometryType.PLANE]: {
-    width: 1,
-    height: 1,
-    widthSegments: 1,
-    heightSegments: 1,
-  },
-  [GeometryType.CIRCLE]: { radius: 0.5, segments: 16 },
-  [GeometryType.RING]: {
-    innerRadius: 0.25,
-    outerRadius: 0.5,
-    thetaSegments: 16,
-  },
-  [GeometryType.DODECAHEDRON]: { radius: 0.5, detail: 0 },
-  [GeometryType.ICOSAHEDRON]: { radius: 0.5, detail: 0 },
-  [GeometryType.OCTAHEDRON]: { radius: 0.5, detail: 0 },
-  [GeometryType.TETRAHEDRON]: { radius: 0.5, detail: 0 },
-  [GeometryType.CAPSULE]: {
-    radius: 0.25,
-    length: 0.5,
-    capSegments: 4,
-    radialSegments: 8,
-  },
 }
 
 // Default values for VFXParticles props (used by reset button)
@@ -154,802 +90,11 @@ export const DEFAULT_VALUES = Object.freeze({
   collision: null,
 })
 
-// Create geometry from type and args
-export const createGeometry = (type, args = {}) => {
-  if (type === GeometryType.NONE || !type) return null
-
-  const defaults = geometryDefaults[type] || {}
-  const mergedArgs = { ...defaults, ...args }
-
-  switch (type) {
-    case GeometryType.BOX:
-      return new THREE.BoxGeometry(
-        mergedArgs.width,
-        mergedArgs.height,
-        mergedArgs.depth,
-        mergedArgs.widthSegments,
-        mergedArgs.heightSegments,
-        mergedArgs.depthSegments
-      )
-    case GeometryType.SPHERE:
-      return new THREE.SphereGeometry(
-        mergedArgs.radius,
-        mergedArgs.widthSegments,
-        mergedArgs.heightSegments
-      )
-    case GeometryType.CYLINDER:
-      return new THREE.CylinderGeometry(
-        mergedArgs.radiusTop,
-        mergedArgs.radiusBottom,
-        mergedArgs.height,
-        mergedArgs.radialSegments,
-        mergedArgs.heightSegments
-      )
-    case GeometryType.CONE:
-      return new THREE.ConeGeometry(
-        mergedArgs.radius,
-        mergedArgs.height,
-        mergedArgs.radialSegments,
-        mergedArgs.heightSegments
-      )
-    case GeometryType.TORUS:
-      return new THREE.TorusGeometry(
-        mergedArgs.radius,
-        mergedArgs.tube,
-        mergedArgs.radialSegments,
-        mergedArgs.tubularSegments
-      )
-    case GeometryType.PLANE:
-      return new THREE.PlaneGeometry(
-        mergedArgs.width,
-        mergedArgs.height,
-        mergedArgs.widthSegments,
-        mergedArgs.heightSegments
-      )
-    case GeometryType.CIRCLE:
-      return new THREE.CircleGeometry(mergedArgs.radius, mergedArgs.segments)
-    case GeometryType.RING:
-      return new THREE.RingGeometry(
-        mergedArgs.innerRadius,
-        mergedArgs.outerRadius,
-        mergedArgs.thetaSegments
-      )
-    case GeometryType.DODECAHEDRON:
-      return new THREE.DodecahedronGeometry(
-        mergedArgs.radius,
-        mergedArgs.detail
-      )
-    case GeometryType.ICOSAHEDRON:
-      return new THREE.IcosahedronGeometry(mergedArgs.radius, mergedArgs.detail)
-    case GeometryType.OCTAHEDRON:
-      return new THREE.OctahedronGeometry(mergedArgs.radius, mergedArgs.detail)
-    case GeometryType.TETRAHEDRON:
-      return new THREE.TetrahedronGeometry(mergedArgs.radius, mergedArgs.detail)
-    case GeometryType.CAPSULE:
-      return new THREE.CapsuleGeometry(
-        mergedArgs.radius,
-        mergedArgs.length,
-        mergedArgs.capSegments,
-        mergedArgs.radialSegments
-      )
-    default:
-      return null
-  }
-}
-
 // Global state for the debug panel
 let debugRoot = null
 let debugContainer = null
 let currentValues = null
 let currentOnChange = null
-
-// ray.so "wrapped" theme - warm amber glow on dark glass
-const wrapped = {
-  // Core backgrounds
-  bg: 'rgba(10, 10, 12, 0.92)',
-  bgPanel: 'rgba(18, 18, 22, 0.85)',
-  bgSection: 'rgba(25, 25, 30, 0.7)',
-  bgInput: 'rgba(0, 0, 0, 0.4)',
-
-  // Warm amber/orange accent (the signature wrapped glow)
-  accent: '#f97316',
-  accentLight: '#fb923c',
-  accentGlow: 'rgba(249, 115, 22, 0.5)',
-  accentSoft: 'rgba(249, 115, 22, 0.15)',
-
-  // Borders with soft warm light
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderLit: 'rgba(251, 146, 60, 0.3)',
-  borderGlow: 'rgba(249, 115, 22, 0.2)',
-
-  // Text colors
-  text: 'rgba(255, 255, 255, 0.95)',
-  textMuted: 'rgba(255, 255, 255, 0.5)',
-  textDim: 'rgba(255, 255, 255, 0.3)',
-  textAccent: '#fdba74',
-
-  // Soft fading grid background (fades from bottom to top)
-  gridBg: `
-    linear-gradient(to top, rgba(10, 10, 12, 0) 0%, rgba(10, 10, 12, 0.95) 100%),
-    linear-gradient(rgba(249, 115, 22, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(249, 115, 22, 0.03) 1px, transparent 1px)
-  `,
-  gridSize: '24px 24px',
-
-  // Shadow with warm undertone
-  shadow:
-    '0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 1px rgba(251, 146, 60, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
-}
-
-// Helper to format value for JSX output
-const formatJSXValue = (key, value) => {
-  if (value === undefined || value === null) return null
-
-  // Booleans
-  if (typeof value === 'boolean') {
-    return value ? `${key}={true}` : `${key}={false}`
-  }
-
-  // Numbers
-  if (typeof value === 'number') {
-    return `${key}={${value}}`
-  }
-
-  // Strings
-  if (typeof value === 'string') {
-    // Check if it's a color
-    if (value.startsWith('#') || value.startsWith('rgb')) {
-      return `${key}="${value}"`
-    }
-    return `${key}="${value}"`
-  }
-
-  // Arrays
-  if (Array.isArray(value)) {
-    // Check if it's an array of colors (strings starting with #)
-    if (
-      value.length > 0 &&
-      typeof value[0] === 'string' &&
-      value[0].startsWith('#')
-    ) {
-      return `${key}={[${value.map((v) => `"${v}"`).join(', ')}]}`
-    }
-    // Check if it's a 2D array (like direction [[min, max], [min, max], [min, max]])
-    if (value.length > 0 && Array.isArray(value[0])) {
-      return `${key}={[${value.map((v) => `[${v.join(', ')}]`).join(', ')}]}`
-    }
-    // Simple array of numbers
-    return `${key}={[${value.join(', ')}]}`
-  }
-
-  // Objects
-  if (typeof value === 'object') {
-    const formatValue = (v, indent) => {
-      if (v === undefined || v === null) return 'null'
-      if (typeof v === 'string') return `"${v}"`
-      if (typeof v === 'number' || typeof v === 'boolean') return String(v)
-      if (Array.isArray(v)) {
-        // Check if array of objects
-        if (v.length > 0 && typeof v[0] === 'object' && !Array.isArray(v[0])) {
-          const items = v.map((item) => formatValue(item, indent + 2))
-          return `[\n${items.map((i) => ' '.repeat(indent + 2) + i).join(',\n')}\n${' '.repeat(indent)}]`
-        }
-        // Simple array
-        return `[${v.map((item) => formatValue(item, indent)).join(', ')}]`
-      }
-      if (typeof v === 'object') {
-        return formatObject(v, indent + 2)
-      }
-      return String(v)
-    }
-
-    const formatObject = (obj, indent = 2) => {
-      const entries = Object.entries(obj).filter(
-        ([, v]) => v !== undefined && v !== null
-      )
-      if (entries.length === 0) return '{}'
-
-      const lines = entries.map(([k, v]) => {
-        return `${' '.repeat(indent)}${k}: ${formatValue(v, indent)}`
-      })
-      return `{\n${lines.join(',\n')}\n${' '.repeat(indent - 2)}}`
-    }
-    return `${key}={${formatObject(value, 4)}}`
-  }
-
-  return null
-}
-
-// Map geometry type to Three.js constructor call
-const geometryTypeToJSX = (type, args) => {
-  if (!type || type === GeometryType.NONE) return null
-
-  const defaults = geometryDefaults[type] || {}
-  const mergedArgs = { ...defaults, ...args }
-
-  const formatArgs = (argNames) => {
-    return argNames.map((name) => mergedArgs[name]).join(', ')
-  }
-
-  switch (type) {
-    case GeometryType.BOX:
-      return `new BoxGeometry(${formatArgs(['width', 'height', 'depth', 'widthSegments', 'heightSegments', 'depthSegments'])})`
-    case GeometryType.SPHERE:
-      return `new SphereGeometry(${formatArgs(['radius', 'widthSegments', 'heightSegments'])})`
-    case GeometryType.CYLINDER:
-      return `new CylinderGeometry(${formatArgs(['radiusTop', 'radiusBottom', 'height', 'radialSegments', 'heightSegments'])})`
-    case GeometryType.CONE:
-      return `new ConeGeometry(${formatArgs(['radius', 'height', 'radialSegments', 'heightSegments'])})`
-    case GeometryType.TORUS:
-      return `new TorusGeometry(${formatArgs(['radius', 'tube', 'radialSegments', 'tubularSegments'])})`
-    case GeometryType.PLANE:
-      return `new PlaneGeometry(${formatArgs(['width', 'height', 'widthSegments', 'heightSegments'])})`
-    case GeometryType.CIRCLE:
-      return `new CircleGeometry(${formatArgs(['radius', 'segments'])})`
-    case GeometryType.RING:
-      return `new RingGeometry(${formatArgs(['innerRadius', 'outerRadius', 'thetaSegments'])})`
-    case GeometryType.DODECAHEDRON:
-      return `new DodecahedronGeometry(${formatArgs(['radius', 'detail'])})`
-    case GeometryType.ICOSAHEDRON:
-      return `new IcosahedronGeometry(${formatArgs(['radius', 'detail'])})`
-    case GeometryType.OCTAHEDRON:
-      return `new OctahedronGeometry(${formatArgs(['radius', 'detail'])})`
-    case GeometryType.TETRAHEDRON:
-      return `new TetrahedronGeometry(${formatArgs(['radius', 'detail'])})`
-    case GeometryType.CAPSULE:
-      return `new CapsuleGeometry(${formatArgs(['radius', 'length', 'capSegments', 'radialSegments'])})`
-    default:
-      return null
-  }
-}
-
-// Helper to check if array equals default
-const arraysEqual = (a, b) => {
-  if (!Array.isArray(a) || !Array.isArray(b)) return false
-  if (a.length !== b.length) return false
-  return a.every((v, i) => {
-    if (Array.isArray(v) && Array.isArray(b[i])) return arraysEqual(v, b[i])
-    return v === b[i]
-  })
-}
-
-// Helper to check if friction is at default (no effect)
-const isDefaultFriction = (f) => {
-  if (!f) return true
-  const intensity = f.intensity
-  if (Array.isArray(intensity)) {
-    return intensity[0] === 0 && intensity[1] === 0
-  }
-  return intensity === 0 || intensity === undefined
-}
-
-// Helper to check if turbulence is at default (no effect)
-const isDefaultTurbulence = (t) => {
-  if (!t) return true
-  return t.intensity === 0 || t.intensity === undefined
-}
-
-// Generate full JSX string from values
-const generateVFXParticlesJSX = (values) => {
-  const props = []
-
-  // Define prop order for clean output
-  const propOrder = [
-    'name',
-    'curveTexturePath',
-    'maxParticles',
-    'position',
-    'autoStart',
-    'emitCount',
-    'delay',
-    'intensity',
-    'size',
-    'fadeSize',
-    'fadeSizeCurve',
-    'colorStart',
-    'colorEnd',
-    'fadeOpacity',
-    'fadeOpacityCurve',
-    'gravity',
-    'speed',
-    'lifetime',
-    'friction',
-    'velocityCurve',
-    'direction',
-    'startPosition',
-    'startPositionAsDirection',
-    'rotation',
-    'rotationSpeed',
-    'rotationSpeedCurve',
-    'orientToDirection',
-    'orientAxis',
-    'stretchBySpeed',
-    'appearance',
-    'blending',
-    'lighting',
-    'shadow',
-    'emitterShape',
-    'emitterRadius',
-    'emitterAngle',
-    'emitterHeight',
-    'emitterDirection',
-    'emitterSurfaceOnly',
-    'turbulence',
-    'collision',
-    'softParticles',
-    'softDistance',
-    'attractToCenter',
-  ]
-
-  // Handle geometry specially
-  if (values.geometryType && values.geometryType !== GeometryType.NONE) {
-    const geoJsx = geometryTypeToJSX(values.geometryType, values.geometryArgs)
-    if (geoJsx) {
-      props.push(`geometry={${geoJsx}}`)
-    }
-  }
-
-  for (const key of propOrder) {
-    const value = values[key]
-    if (value === undefined || value === null) continue
-
-    // Skip default values - only output what's actually configured
-    if (key === 'name' && !value) continue
-    if (key === 'curveTexturePath' && !value) continue
-    if (key === 'maxParticles' && value === 10000) continue
-    if (key === 'position' && arraysEqual(value, [0, 0, 0])) continue
-    if (key === 'autoStart' && value === true) continue
-    if (key === 'emitCount' && value === 1) continue
-    if (key === 'delay' && value === 0) continue
-    if (key === 'intensity' && value === 1) continue
-
-    // Size/speed/lifetime defaults
-    if (key === 'size' && arraysEqual(value, [0.1, 0.3])) continue
-    if (key === 'speed' && arraysEqual(value, [0.1, 0.1])) continue
-    if (key === 'lifetime' && arraysEqual(value, [1, 2])) continue
-
-    // Fade defaults (both 1→0)
-    if (key === 'fadeSize' && arraysEqual(value, [1, 0])) continue
-    if (key === 'fadeOpacity' && arraysEqual(value, [1, 0])) continue
-
-    // Color defaults
-    if (key === 'colorStart' && arraysEqual(value, ['#ffffff'])) continue
-    // colorEnd null is already skipped by the null check above
-
-    // Physics defaults
-    if (key === 'gravity' && arraysEqual(value, [0, 0, 0])) continue
-    if (key === 'friction' && isDefaultFriction(value)) continue
-    // Skip friction if velocityCurve is active (they're mutually exclusive)
-    if (key === 'friction' && values.velocityCurve) continue
-
-    // Direction defaults
-    if (
-      key === 'direction' &&
-      arraysEqual(value, [
-        [-1, 1],
-        [0, 1],
-        [-1, 1],
-      ])
-    )
-      continue
-    // Skip direction if startPositionAsDirection is enabled (direction is ignored)
-    if (key === 'direction' && values.startPositionAsDirection) continue
-
-    // Start position default (no offset)
-    if (
-      key === 'startPosition' &&
-      arraysEqual(value, [
-        [0, 0],
-        [0, 0],
-        [0, 0],
-      ])
-    )
-      continue
-    if (key === 'startPositionAsDirection' && value === false) continue
-
-    // Rotation defaults (no rotation)
-    if (key === 'rotation' && arraysEqual(value, [0, 0])) continue
-    if (key === 'rotationSpeed' && arraysEqual(value, [0, 0])) continue
-
-    // Appearance/blending/lighting defaults
-    if (key === 'appearance' && value === 0) continue // GRADIENT
-    if (key === 'blending' && value === 1) continue // NORMAL
-    if (key === 'lighting' && value === 1) continue // STANDARD
-
-    if (key === 'shadow' && value === false) continue
-    if (key === 'orientToDirection' && value === false) continue
-    // Skip orientAxis if default "z" OR if neither orientToDirection nor stretchBySpeed is active
-    if (key === 'orientAxis') {
-      const axisNeeded = values.orientToDirection || values.stretchBySpeed
-      if (!axisNeeded || value === 'z' || value === '+z') continue
-    }
-    if (key === 'stretchBySpeed' && !value) continue
-
-    // Emitter shape defaults
-    if (key === 'emitterShape' && value === 0) continue // BOX
-    if (key === 'emitterRadius' && arraysEqual(value, [0, 1])) continue
-    if (key === 'emitterAngle' && Math.abs(value - Math.PI / 4) < 0.001)
-      continue
-    if (key === 'emitterHeight' && arraysEqual(value, [0, 1])) continue
-    if (key === 'emitterDirection' && arraysEqual(value, [0, 1, 0])) continue
-    if (key === 'emitterSurfaceOnly' && value === false) continue
-
-    // Effects defaults (disabled)
-    if (key === 'turbulence' && isDefaultTurbulence(value)) continue
-    if (key === 'collision' && !value) continue
-    if (key === 'softParticles' && value === false) continue
-    if (key === 'softDistance' && !values.softParticles) continue
-    if (key === 'attractToCenter' && value === false) continue
-
-    const formatted = formatJSXValue(key, value)
-    if (formatted) props.push(formatted)
-  }
-
-  if (props.length === 0) {
-    return '<VFXParticles />'
-  }
-
-  return `<VFXParticles\n  ${props.join('\n  ')}\n/>`
-}
-
-// Styles for the debug panel - ray.so wrapped theme
-const styles = {
-  container: {
-    position: 'fixed',
-    top: '16px',
-    right: '16px',
-    bottom: '16px',
-    minWidth: '300px',
-    background: wrapped.bg,
-    borderRadius: '12px',
-    fontFamily:
-      "'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', monospace",
-    fontSize: '12px',
-    color: wrapped.text,
-    boxShadow: wrapped.shadow,
-    zIndex: 99999,
-    backdropFilter: 'blur(40px) saturate(150%)',
-    WebkitBackdropFilter: 'blur(40px) saturate(150%)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    border: `1px solid ${wrapped.border}`,
-    transition: 'border-color 0.3s ease',
-  },
-  resizeHandle: {
-    position: 'absolute',
-    bottom: '0',
-    left: '0',
-    width: '12px',
-    height: '12px',
-    cursor: 'sw-resize',
-    background: `linear-gradient(135deg, transparent 50%, ${wrapped.accentLight} 50%)`,
-    borderRadius: '0 0 0 12px',
-    opacity: 0.5,
-  },
-  resizeHandleRight: {
-    position: 'absolute',
-    top: '48px',
-    left: '0',
-    width: '6px',
-    height: 'calc(100% - 58px)',
-    cursor: 'ew-resize',
-    background: 'transparent',
-  },
-  resizeHandleBottom: {
-    position: 'absolute',
-    bottom: '0',
-    left: '12px',
-    right: '12px',
-    height: '6px',
-    cursor: 'ns-resize',
-    background: 'transparent',
-  },
-  header: {
-    padding: '10px 14px',
-    background: 'transparent',
-    borderBottom: `1px solid ${wrapped.border}`,
-    fontWeight: '400',
-    fontSize: '11px',
-    color: wrapped.textMuted,
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    letterSpacing: '0.02em',
-  },
-  headerTitle: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  headerDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    background: wrapped.accent,
-    boxShadow: `0 0 8px ${wrapped.accentGlow}`,
-    animation: 'dotPulse 2s ease-in-out infinite',
-  },
-  content: {
-    padding: '8px',
-    overflowY: 'auto',
-    flex: 1,
-    scrollbarWidth: 'thin',
-    scrollbarColor: `${wrapped.accent} transparent`,
-    background: wrapped.gridBg,
-    backgroundSize: `100% 100%, ${wrapped.gridSize}, ${wrapped.gridSize}`,
-  },
-  section: {
-    marginBottom: '4px',
-    background: wrapped.bgSection,
-    borderRadius: '8px',
-    overflow: 'hidden',
-    border: `1px solid ${wrapped.border}`,
-    transition: 'all 0.25s ease',
-    position: 'relative',
-  },
-  sectionHover: {
-    borderColor: 'transparent',
-    background: `linear-gradient(${wrapped.bgSection}, ${wrapped.bgSection}) padding-box, linear-gradient(135deg, ${wrapped.accent} 0%, ${wrapped.accentLight} 50%, rgba(251, 191, 36, 0.6) 100%) border-box`,
-  },
-  sectionHeader: {
-    padding: '10px 12px',
-    background: 'rgba(255, 255, 255, 0.02)',
-    cursor: 'pointer',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    fontWeight: '500',
-    fontSize: '11px',
-    letterSpacing: '0.03em',
-    transition: 'all 0.2s ease',
-    userSelect: 'none',
-    color: wrapped.text,
-  },
-  sectionContent: {
-    padding: '10px 12px',
-    background: 'rgba(0, 0, 0, 0.15)',
-  },
-  row: {
-    marginBottom: '8px',
-  },
-  label: {
-    display: 'block',
-    marginBottom: '5px',
-    color: wrapped.textMuted,
-    fontSize: '10px',
-    fontWeight: '500',
-    textTransform: 'lowercase',
-    letterSpacing: '0.04em',
-  },
-  input: {
-    width: '100%',
-    padding: '7px 10px',
-    background: wrapped.bgInput,
-    border: `1px solid ${wrapped.border}`,
-    borderRadius: '6px',
-    color: wrapped.text,
-    fontSize: '12px',
-    fontFamily: 'inherit',
-    outline: 'none',
-    transition: 'all 0.2s ease',
-    boxSizing: 'border-box',
-  },
-  rangeRow: {
-    display: 'flex',
-    gap: '6px',
-    alignItems: 'center',
-  },
-  rangeInput: {
-    flex: 1,
-    padding: '7px 10px',
-    background: wrapped.bgInput,
-    border: `1px solid ${wrapped.border}`,
-    borderRadius: '6px',
-    color: wrapped.text,
-    fontSize: '12px',
-    fontFamily: 'inherit',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'all 0.2s ease',
-  },
-  rangeSeparator: {
-    color: wrapped.accent,
-    fontSize: '11px',
-    fontWeight: '600',
-  },
-  checkbox: {
-    marginRight: '10px',
-    accentColor: wrapped.accent,
-    width: '13px',
-    height: '13px',
-  },
-  checkboxLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    cursor: 'pointer',
-    padding: '5px 0',
-    color: wrapped.text,
-    fontSize: '11px',
-  },
-  select: {
-    width: '100%',
-    padding: '7px 10px',
-    background: wrapped.bgInput,
-    border: `1px solid ${wrapped.border}`,
-    borderRadius: '6px',
-    color: wrapped.text,
-    fontSize: '12px',
-    fontFamily: 'inherit',
-    outline: 'none',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
-    transition: 'all 0.2s ease',
-  },
-  colorInput: {
-    width: '32px',
-    height: '24px',
-    padding: '2px',
-    border: `1px solid ${wrapped.border}`,
-    borderRadius: '4px',
-    cursor: 'pointer',
-    background: wrapped.bgInput,
-    transition: 'all 0.2s ease',
-  },
-  colorRow: {
-    display: 'flex',
-    gap: '5px',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-  },
-  addColorBtn: {
-    width: '24px',
-    height: '24px',
-    background: 'transparent',
-    border: `1px dashed ${wrapped.textDim}`,
-    borderRadius: '4px',
-    color: wrapped.textMuted,
-    cursor: 'pointer',
-    fontSize: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s ease',
-  },
-  removeColorBtn: {
-    position: 'absolute',
-    top: '-4px',
-    right: '-4px',
-    width: '14px',
-    height: '14px',
-    background: wrapped.accent,
-    border: 'none',
-    borderRadius: '50%',
-    color: '#000',
-    cursor: 'pointer',
-    fontSize: '9px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    lineHeight: 1,
-    fontWeight: 'bold',
-    boxShadow: `0 2px 8px ${wrapped.accentGlow}`,
-  },
-  colorWrapper: {
-    position: 'relative',
-  },
-  vec3Row: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    gap: '5px',
-  },
-  vec3Input: {
-    padding: '7px 5px',
-    background: wrapped.bgInput,
-    border: `1px solid ${wrapped.border}`,
-    borderRadius: '6px',
-    color: wrapped.text,
-    fontSize: '11px',
-    fontFamily: 'inherit',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-    textAlign: 'center',
-    transition: 'all 0.2s ease',
-  },
-  vec3Label: {
-    fontSize: '9px',
-    color: wrapped.textDim,
-    textAlign: 'center',
-    marginTop: '3px',
-    fontWeight: '500',
-    letterSpacing: '0.05em',
-    textTransform: 'lowercase',
-  },
-  optionalSection: {
-    // Same as regular sections - no special styling
-  },
-  enableCheckbox: {
-    marginBottom: '8px',
-    paddingBottom: '8px',
-    borderBottom: `1px solid ${wrapped.border}`,
-  },
-  minimizeBtn: {
-    background: 'transparent',
-    border: `1px solid ${wrapped.border}`,
-    color: wrapped.textMuted,
-    cursor: 'pointer',
-    fontSize: '11px',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    transition: 'all 0.2s ease',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: wrapped.textMuted,
-    cursor: 'pointer',
-    fontSize: '14px',
-    padding: '4px 6px',
-    borderRadius: '4px',
-    transition: 'all 0.15s ease',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerButtons: {
-    display: 'flex',
-    gap: '6px',
-    alignItems: 'center',
-  },
-  copyBtn: {
-    background: `linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(251, 146, 60, 0.1) 100%)`,
-    border: `1px solid ${wrapped.borderLit}`,
-    color: wrapped.accent,
-    cursor: 'pointer',
-    fontSize: '10px',
-    padding: '4px 12px',
-    borderRadius: '4px',
-    transition: 'all 0.2s ease',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '4px',
-    minWidth: '70px',
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', monospace",
-    textTransform: 'lowercase',
-    boxShadow: `0 0 12px rgba(249, 115, 22, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)`,
-    textShadow: `0 0 8px rgba(249, 115, 22, 0.5)`,
-  },
-  copyBtnHover: {
-    background: `linear-gradient(135deg, rgba(249, 115, 22, 0.25) 0%, rgba(251, 146, 60, 0.15) 100%)`,
-    borderColor: wrapped.accent,
-    boxShadow: `0 0 20px rgba(249, 115, 22, 0.4), 0 0 40px rgba(249, 115, 22, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)`,
-    color: wrapped.accentLight,
-    textShadow: `0 0 12px rgba(249, 115, 22, 0.8)`,
-  },
-  copyBtnSuccess: {
-    background: `linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.15) 100%)`,
-    borderColor: 'rgba(34, 197, 94, 0.6)',
-    color: '#4ade80',
-    boxShadow: `0 0 16px rgba(34, 197, 94, 0.4), 0 0 32px rgba(34, 197, 94, 0.2)`,
-    textShadow: `0 0 8px rgba(34, 197, 94, 0.6)`,
-  },
-  inputDragging: {
-    background: `rgba(249, 115, 22, 0.15) !important`,
-    borderColor: `${wrapped.accent} !important`,
-    boxShadow: `0 0 0 2px ${wrapped.accentGlow}, 0 0 12px rgba(249, 115, 22, 0.3)`,
-    color: wrapped.accentLight,
-  },
-  arrow: {
-    fontSize: '8px',
-    transition: 'transform 0.2s ease',
-    color: wrapped.accent,
-  },
-}
 
 // Helper to parse range values
 const parseRange = (value, defaultVal = [0, 0]) => {
@@ -3594,7 +2739,7 @@ const LoadingSpinner = () => (
   </svg>
 )
 
-const DebugPanelContent = ({ initialValues, onUpdate }) => {
+const DebugPanelContent = ({ initialValues, onUpdate, mode = 'r3f' }) => {
   'use no memo' // prevent react compiler issues when there are multiple versions of react
   const [isMinimized, setIsMinimized] = useState(false)
   const [panelSize, setPanelSize] = useState({ width: 380, height: null }) // null = full height
@@ -3680,21 +2825,24 @@ const DebugPanelContent = ({ initialValues, onUpdate }) => {
     }
   }, [])
 
-  // Copy JSX to clipboard
-  const handleCopyJSX = useCallback(async () => {
+  // Copy code to clipboard
+  const handleCopyCode = useCallback(async () => {
     // Flush any pending changes first
     if (hasPendingChanges) {
       flushChanges()
     }
-    const jsx = generateVFXParticlesJSX(valuesRef.current)
+    const code =
+      mode === 'vanilla'
+        ? generateVanillaCode(valuesRef.current)
+        : generateVFXParticlesJSX(valuesRef.current)
     try {
-      await navigator.clipboard.writeText(jsx)
+      await navigator.clipboard.writeText(code)
       setCopySuccess(true)
       setTimeout(() => setCopySuccess(false), 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
     }
-  }, [hasPendingChanges, flushChanges])
+  }, [hasPendingChanges, flushChanges, mode])
 
   // Bake and export curve texture as binary
   const handleBakeCurves = useCallback(async () => {
@@ -4173,7 +3321,7 @@ const DebugPanelContent = ({ initialValues, onUpdate }) => {
               ...styles.copyBtn,
               ...(copySuccess ? styles.copyBtnSuccess : {}),
             }}
-            onClick={handleCopyJSX}
+            onClick={handleCopyCode}
             onMouseEnter={(e) => {
               if (!copySuccess) {
                 Object.assign(e.currentTarget.style, {
@@ -4197,7 +3345,7 @@ const DebugPanelContent = ({ initialValues, onUpdate }) => {
               }
             }}
           >
-            {copySuccess ? '✓ copied' : 'copy jsx'}
+            {copySuccess ? '✓ copied' : 'copy code'}
           </button>
           <button
             style={{
@@ -5305,7 +4453,7 @@ const DebugPanelContent = ({ initialValues, onUpdate }) => {
 }
 
 // Exported functions for imperative rendering (outside R3F)
-export function renderDebugPanel(values, onChange) {
+export function renderDebugPanel(values, onChange, mode = 'r3f') {
   currentValues = values
   currentOnChange = onChange
 
@@ -5446,16 +4594,20 @@ export function renderDebugPanel(values, onChange) {
   }
 
   debugRoot.render(
-    <DebugPanelContent initialValues={values} onUpdate={onChange} />
+    <DebugPanelContent initialValues={values} onUpdate={onChange} mode={mode} />
   )
 }
 
-export function updateDebugPanel(values, onChange) {
+export function updateDebugPanel(values, onChange, mode = 'r3f') {
   currentValues = values
   currentOnChange = onChange
   if (debugRoot) {
     debugRoot.render(
-      <DebugPanelContent initialValues={values} onUpdate={onChange} />
+      <DebugPanelContent
+        initialValues={values}
+        onUpdate={onChange}
+        mode={mode}
+      />
     )
   }
 }

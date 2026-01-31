@@ -1,5 +1,5 @@
 import type * as THREE from 'three/webgpu'
-import type { Appearance, Blending, EmitterShape, Lighting } from './constants'
+import type { Appearance, EmitterShape, Lighting } from './constants'
 
 // Curve point for Bezier splines
 export type CurvePoint = {
@@ -67,6 +67,115 @@ export type StretchConfig = {
   maxStretch: number
 } | null
 
+// Normalized particle props - all shorthand/optional values resolved to canonical form
+export type NormalizedParticleProps = {
+  maxParticles: number
+  sizeRange: [number, number]
+  speedRange: [number, number]
+  fadeSizeRange: [number, number]
+  fadeOpacityRange: [number, number]
+  lifetimeRange: [number, number]
+  gravity: [number, number, number]
+  direction3D: [[number, number], [number, number], [number, number]]
+  startPosition3D: [[number, number], [number, number], [number, number]]
+  rotation3D: [[number, number], [number, number], [number, number]]
+  rotationSpeed3D: [[number, number], [number, number], [number, number]]
+  frictionIntensityRange: [number, number]
+  frictionEasingType: number
+  startColors: [number, number, number][]
+  endColors: [number, number, number][]
+  colorStartCount: number
+  colorEndCount: number
+  emitterRadiusRange: [number, number]
+  emitterHeightRange: [number, number]
+  intensity: number
+  position: [number, number, number]
+  autoStart: boolean
+  delay: number
+  emitCount: number
+  emitterShape: number
+  emitterAngle: number
+  emitterSurfaceOnly: boolean
+  emitterDirection: [number, number, number]
+  turbulence: TurbulenceConfig
+  attractors: AttractorConfig[] | null
+  attractToCenter: boolean
+  startPositionAsDirection: boolean
+  softParticles: boolean
+  softDistance: number
+  collision: CollisionConfig
+  appearance: string
+  alphaMap: THREE.Texture | null
+  flipbook: FlipbookConfig
+  rotation: Rotation3DInput
+  rotationSpeed: Rotation3DInput
+  geometry: THREE.BufferGeometry | null
+  orientToDirection: boolean
+  orientAxis: string
+  stretchBySpeed: StretchConfig
+  lighting: string
+  shadow: boolean
+  blending: THREE.Blending
+  depthTest: boolean
+  renderOrder: number
+  colorStart: string[]
+  colorEnd: string[] | null
+  // Raw prop values for debug panel
+  size: number | [number, number]
+  speed: number | [number, number]
+  fadeSize: number | [number, number]
+  fadeOpacity: number | [number, number]
+  lifetime: number | [number, number]
+  direction: Rotation3DInput
+  startPosition: Rotation3DInput
+  friction: FrictionConfig
+  emitterRadius: number | [number, number]
+  emitterHeight: number | [number, number]
+}
+
+// Options for VFXParticleSystem constructor
+export type VFXParticleSystemOptions = BaseParticleProps & {
+  /** TSL node or function for backdrop sampling */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  backdropNode?: any | ((data: ParticleData) => any) | null
+  /** TSL node or function for custom opacity */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opacityNode?: any | ((data: ParticleData) => any) | null
+  /** TSL node or function to override color */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  colorNode?: any | ((data: ParticleData, defaultColor: any) => any) | null
+  /** TSL node or function for alpha test/discard */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  alphaTestNode?: any | ((data: ParticleData) => any) | null
+  /** TSL node or function for shadow map output */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  castShadowNode?: any | ((data: ParticleData) => any) | null
+  /** Depth test */
+  depthTest?: boolean
+  /** Render order (higher values render on top) */
+  renderOrder?: number
+  /** Path to pre-baked curve texture (skips runtime baking for faster load) */
+  curveTexturePath?: string | null
+}
+
+// Options for EmitterController constructor
+export type EmitterControllerOptions = {
+  emitCount?: number
+  delay?: number
+  autoStart?: boolean
+  loop?: boolean
+  localDirection?: boolean
+  direction?: [[number, number], [number, number], [number, number]]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  overrides?: Record<string, any> | null
+  onEmit?: (params: {
+    position: [number, number, number] | number[]
+    count: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    direction: any
+  }) => void
+}
+
 // Base particle system props (framework-agnostic)
 export type BaseParticleProps = {
   /** Maximum number of particles */
@@ -124,7 +233,7 @@ export type BaseParticleProps = {
   /** Enable shadows on geometry instances */
   shadow?: boolean
   /** Blending mode */
-  blending?: (typeof Blending)[keyof typeof Blending]
+  blending?: THREE.Blending
   /** Color intensity multiplier */
   intensity?: number
   /** Emitter position [x, y, z] */

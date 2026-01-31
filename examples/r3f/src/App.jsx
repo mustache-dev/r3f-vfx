@@ -22,11 +22,7 @@ const keyboardMap = [
 export default function App() {
   return (
     <>
-
-      <Canvas
-        shadows
-        renderer
-      >
+      <Canvas shadows renderer>
         <Suspense fallback={null}>
           <SceneLight />
           <WebGPUPostProcessing />

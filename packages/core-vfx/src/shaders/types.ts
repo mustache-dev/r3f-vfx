@@ -28,6 +28,9 @@ export type ShaderFeatures = {
   collision: boolean // Plane collision with bounce/die
   rotation: boolean // Per-particle rotation and rotation speed
   perParticleColor: boolean // Per-particle color arrays (vs single uniform color)
+  // Storage array features (used by createStorageArrays)
+  needsPerParticleColor: boolean
+  needsRotation: boolean
 }
 
 // Material creation options
