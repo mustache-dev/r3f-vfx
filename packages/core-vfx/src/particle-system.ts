@@ -49,7 +49,7 @@ export class VFXParticleSystem {
   private _nextIndex = 0
   private _initialized = false
   private _emitting: boolean
-  _emitAccumulator = 0
+  private _emitAccumulator = 0
   private _turbulenceSpeed: number
   private _position: [number, number, number]
 

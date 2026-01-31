@@ -137,19 +137,19 @@ export type NormalizedParticleProps = {
 export type VFXParticleSystemOptions = BaseParticleProps & {
   /** TSL node or function for backdrop sampling */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  backdropNode?: any
+  backdropNode?: any | ((data: ParticleData) => any) | null
   /** TSL node or function for custom opacity */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opacityNode?: any
+  opacityNode?: any | ((data: ParticleData) => any) | null
   /** TSL node or function to override color */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  colorNode?: any
+  colorNode?: any | ((data: ParticleData, defaultColor: any) => any) | null
   /** TSL node or function for alpha test/discard */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  alphaTestNode?: any
+  alphaTestNode?: any | ((data: ParticleData) => any) | null
   /** TSL node or function for shadow map output */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  castShadowNode?: any
+  castShadowNode?: any | ((data: ParticleData) => any) | null
   /** Depth test */
   depthTest?: boolean
   /** Render order (higher values render on top) */
