@@ -1,4 +1,4 @@
-export { type CoreState, coreStore } from './core-store'
+export { type CoreState, type ParticleSystemRef, coreStore } from './core-store'
 
 // Constants
 export {
@@ -25,16 +25,22 @@ export type {
   FlipbookConfig,
   StretchConfig,
   BaseParticleProps,
+  NormalizedParticleProps,
+  VFXParticleSystemOptions,
+  EmitterControllerOptions,
 } from './types'
 
 // Utilities
 export {
+  isWebGPUBackend,
   hexToRgb,
   toRange,
   easingToType,
   axisToNumber,
   toRotation3D,
   lifetimeToFadeRate,
+  isNonDefaultRotation,
+  normalizeProps,
 } from './utils'
 
 // Curve utilities
@@ -46,11 +52,12 @@ export {
   createDefaultCurveTexture,
   loadCurveTextureFromPath,
   buildCurveTextureBin,
+  resolveCurveTexture,
   CurveChannel,
   DEFAULT_LINEAR_CURVE,
 } from './curves'
 
-export type { CurveTextureResult } from './curves'
+export type { CurveTextureResult, CurveTextureResolved } from './curves'
 
 // Shader factories
 export {
@@ -68,3 +75,27 @@ export type {
   MaterialOptions,
   ShaderFeatures,
 } from './shaders'
+
+// Uniforms
+export {
+  createUniforms,
+  updateUniforms,
+  updateUniformsPartial,
+  updateUniformsCurveFlags,
+  applySpawnOverrides,
+} from './uniforms'
+
+// Storage
+export {
+  createStorageArrays,
+  createRenderObject,
+  resolveFeatures,
+  needsRecreation,
+  STRUCTURAL_KEYS,
+} from './storage'
+
+// Particle system class
+export { VFXParticleSystem } from './particle-system'
+
+// Emitter controller class
+export { EmitterController } from './emitter'

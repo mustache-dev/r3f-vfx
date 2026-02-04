@@ -12,14 +12,11 @@ export {
   CurveChannel,
 } from './VFXParticles'
 
-export type { CurveTextureResult } from './VFXParticles'
+export type { VFXParticlesProps, CurveTextureResult } from './VFXParticles'
 
 export { VFXEmitter, useVFXEmitter } from './VFXEmitter'
 
 export { useVFXStore } from './react-store'
-
-export { useCurveTextureAsync } from './useCurveTextureAsync'
-export type { CurveTextureHookResult } from './useCurveTextureAsync'
 
 // Re-export types from core-vfx for convenience
 export type {
@@ -34,4 +31,19 @@ export type {
   FlipbookConfig,
   StretchConfig,
   BaseParticleProps,
+  NormalizedParticleProps,
+  VFXParticleSystemOptions,
+  EmitterControllerOptions,
 } from 'core-vfx'
+
+// Re-export core classes for direct usage
+export {
+  VFXParticleSystem,
+  EmitterController,
+  isWebGPUBackend,
+  isNonDefaultRotation,
+  normalizeProps,
+  resolveCurveTexture,
+} from 'core-vfx'
+
+export type { CurveTextureResolved } from 'core-vfx'

@@ -25,6 +25,8 @@ const DEFAULT_FEATURES: ShaderFeatures = {
   collision: true,
   rotation: true,
   perParticleColor: true,
+  needsPerParticleColor: true,
+  needsRotation: true,
 }
 
 /**

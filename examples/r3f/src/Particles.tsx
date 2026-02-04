@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { VFXParticles } from '../../../packages/r3f-vfx/src/'
+import { VFXParticles } from 'r3f-vfx'
 import {
   TextureLoader,
   BoxGeometry,

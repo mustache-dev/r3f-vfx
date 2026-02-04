@@ -6,6 +6,9 @@ body {
   padding: 0;
   overflow: hidden;
   background-color: rgb(27, 27, 27);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }
 
 canvas {

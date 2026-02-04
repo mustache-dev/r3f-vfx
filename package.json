@@ -6,20 +6,25 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "run-p dev:core dev:debug dev:r3f:example",
-    "dev:vanilla": "run-p dev:core dev:debug dev:vanilla:example",
+    "dev": "run-p dev:core dev:debug dev:r3f:library dev:r3f:example",
+    "vanilla": "run-p dev:core dev:debug dev:vanilla:library dev:vanilla:example",
     "dev:core": "bun run -F core-vfx dev",
     "dev:debug": "bun run -F debug-vfx dev",
     "dev:r3f:library": "bun run -F r3f-vfx dev",
     "dev:r3f:example": "bun run -F r3f-example dev",
+    "dev:vanilla:library": "bun run -F vanilla-vfx dev",
     "dev:vanilla:example": "bun run -F vanilla-example dev",
-    "typecheck": "bun run -F '*' typecheck",
-    "start": "bun run -F r3f-example start",
-    "build": "run-s build:core build:debug build:r3f:library",
+    "build": "run-s build:core build:debug build:r3f:library build:vanilla:library",
     "build:core": "bun run -F core-vfx build",
     "build:debug": "bun run -F debug-vfx build",
     "build:r3f:library": "bun run -F r3f-vfx build",
+    "build:r3f:example": "bun run -F r3f-example build",
+    "build:vanilla:library": "bun run -F vanilla-vfx build",
+    "build:vanilla:example": "bun run -F vanilla-example build",
+    "start": "bun run -F r3f-example start",
+    "start:vanilla": "bun run -F vanilla-example start",
     "format": "prettier . --write",
+    "typecheck": "bun run -F '*' typecheck",
     "changeset:add": "changeset",
     "changeset:version": "changeset version",
     "pub": "bun run build && changeset publish"
@@ -28,5 +33,8 @@
     "@changesets/cli": "2.29.8",
     "npm-run-all": "4.1.5",
     "prettier": "3.8.1"
+  },
+  "overrides": {
+    "three": "0.182.0"
   }
 }

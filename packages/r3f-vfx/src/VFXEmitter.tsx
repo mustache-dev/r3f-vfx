@@ -2,17 +2,22 @@ import {
   useRef,
   useEffect,
   useCallback,
+  useMemo,
   forwardRef,
   useImperativeHandle,
   ReactNode,
   RefObject,
 } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3, Quaternion, Group } from 'three/webgpu'
-import type { Quaternion as QuaternionType } from 'three'
 import { useVFXStore } from './react-store'
+import {
+  EmitterController,
+  isWebGPUBackend,
+  type EmitterControllerOptions,
+} from 'core-vfx'
 
-export interface VFXEmitterProps {
+export interface VFXEmitterProps extends EmitterControllerOptions {
   /** Name of the registered VFXParticles system */
   name?: string
   /** Direct ref to VFXParticles (alternative to name) */
@@ -20,81 +25,14 @@ export interface VFXEmitterProps {
   particlesRef?: RefObject<any> | any
   /** Local position offset */
   position?: [number, number, number]
-  /** Particles to emit per burst */
-  emitCount?: number
-  /** Seconds between emissions (0 = every frame) */
-  delay?: number
-  /** Start emitting automatically */
-  autoStart?: boolean
-  /** Keep emitting (false = emit once) */
-  loop?: boolean
-  /** Transform direction by parent's world rotation */
-  localDirection?: boolean
-  /** Direction override [[minX,maxX],[minY,maxY],[minZ,maxZ]] */
-  direction?: [[number, number], [number, number], [number, number]]
-  /** Per-spawn overrides (size, speed, colors, etc.) */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  overrides?: Record<string, any> | null
-  /** Callback fired after each emission */
-  onEmit?: (params: {
-    position: [number, number, number] | number[]
-    count: number
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    direction: any
-  }) => void
   /** Children elements */
   children?: ReactNode
 }
 
 // Reusable temp objects for transforms (avoid allocations in render loop)
-const _worldPos = new Vector3()
-const _worldQuat = new Quaternion()
-const _tempVec = new Vector3()
+const worldPos = new Vector3()
+const worldQuat = new Quaternion()
 
-/**
- * VFXEmitter - A reusable emitter component that links to a VFXParticles system
- *
- * Multiple VFXEmitters can share a single VFXParticles instance without adding
- * supplementary draw calls. Each emitter just calls spawn() on the shared system.
- *
- * The emitter renders a <group> that inherits parent transforms automatically,
- * so you can place it as a child of any object and it will follow.
- *
- * Usage:
- *
- * // First, set up a VFXParticles with a name
- * <VFXParticles name="sparks" maxParticles={1000} autoStart={false} ... />
- *
- * // Place emitter as child - it automatically follows parent transforms!
- * <group ref={playerRef}>
- *   <VFXEmitter
- *     name="sparks"
- *     position={[0, 1, 0]}  // Local offset from parent
- *     emitCount={5}
- *     delay={0.1}
- *   />
- * </group>
- *
- * // Use localDirection to emit relative to parent's rotation
- * <VFXEmitter
- *   name="sparks"
- *   direction={[[0, 0], [0, 0], [-1, -1]]}  // Emit backward in local space
- *   localDirection={true}  // Direction is transformed by parent's rotation
- * />
- *
- * @param {object} props
- * @param {string} props.name - Name of the registered VFXParticles system
- * @param {object} [props.particlesRef] - Direct ref to VFXParticles (alternative to name)
- * @param {[number, number, number]} [props.position=[0,0,0]] - Local position offset
- * @param {number} [props.emitCount=10] - Particles to emit per burst
- * @param {number} [props.delay=0] - Seconds between emissions (0 = every frame)
- * @param {boolean} [props.autoStart=true] - Start emitting automatically
- * @param {boolean} [props.loop=true] - Keep emitting (false = emit once)
- * @param {boolean} [props.localDirection=false] - Transform direction by parent's world rotation
- * @param {array} [props.direction] - Direction override [[minX,maxX],[minY,maxY],[minZ,maxZ]]
- * @param {object} [props.overrides] - Per-spawn overrides (size, speed, colors, etc.)
- * @param {function} [props.onEmit] - Callback fired after each emission
- */
 export const VFXEmitter = forwardRef(function VFXEmitter(
   {
     name,
@@ -112,10 +50,25 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
   }: VFXEmitterProps,
   ref
 ) {
+  const { gl } = useThree()
+  const isWebGPU = useMemo(() => isWebGPUBackend(gl), [gl])
   const groupRef = useRef<Group>(null)
-  const emitAccumulator = useRef(0)
-  const emitting = useRef(autoStart)
-  const hasEmittedOnce = useRef(false)
+
+  // Create controller
+  const controllerRef = useRef<EmitterController | null>(null)
+  if (!controllerRef.current) {
+    controllerRef.current = new EmitterController({
+      emitCount,
+      delay,
+      autoStart,
+      loop,
+      localDirection,
+      direction,
+      overrides,
+      onEmit,
+    })
+  }
+  const controller = controllerRef.current
 
   // Get particle system from store or direct ref
   const getParticleSystem = useCallback(() => {
@@ -126,60 +79,64 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
     return useVFXStore.getState().getParticles(name)
   }, [name, particlesRef])
 
-  // Transform a direction range by quaternion
-  const transformDirectionByQuat = useCallback(
-    (
-      dirRange: [[number, number], [number, number], [number, number]],
-      quat: QuaternionType
-    ): [[number, number], [number, number], [number, number]] => {
-      // Transform min and max direction vectors
-      // dirRange format: [[minX, maxX], [minY, maxY], [minZ, maxZ]]
-      const minDir = _tempVec.set(
-        dirRange[0][0],
-        dirRange[1][0],
-        dirRange[2][0]
-      )
-      minDir.applyQuaternion(quat)
+  // Link controller to particle system
+  useEffect(() => {
+    if (!isWebGPU) return
+    const system = getParticleSystem()
+    controller.setSystem(system)
+  }, [isWebGPU, getParticleSystem, controller])
 
-      const maxDir = new Vector3(dirRange[0][1], dirRange[1][1], dirRange[2][1])
-      maxDir.applyQuaternion(quat)
+  // Update controller options when props change
+  useEffect(() => {
+    controller.updateOptions({
+      emitCount,
+      delay,
+      autoStart,
+      loop,
+      localDirection,
+      direction,
+      overrides,
+      onEmit,
+    })
+  }, [
+    controller,
+    emitCount,
+    delay,
+    autoStart,
+    loop,
+    localDirection,
+    direction,
+    overrides,
+    onEmit,
+  ])
 
-      // Return transformed ranges (maintain min/max relationship per axis)
-      return [
-        [Math.min(minDir.x, maxDir.x), Math.max(minDir.x, maxDir.x)],
-        [Math.min(minDir.y, maxDir.y), Math.max(minDir.y, maxDir.y)],
-        [Math.min(minDir.z, maxDir.z), Math.max(minDir.z, maxDir.z)],
-      ]
-    },
-    []
-  )
-
-  // Get current emission position and optionally transformed direction
-  const getEmitParams = useCallback(() => {
-    if (!groupRef.current) {
-      return { position: position, direction: direction }
+  // Re-resolve system on each frame in case it registered late
+  useFrame((_, delta) => {
+    if (!isWebGPU) return
+    if (!controller.getSystem()) {
+      const system = getParticleSystem()
+      if (system) controller.setSystem(system)
     }
 
-    let emitDir = direction
+    if (!groupRef.current) return
 
-    // Always get world position of the group (where particles will spawn)
-    groupRef.current.getWorldPosition(_worldPos)
-    const emitPos = [_worldPos.x, _worldPos.y, _worldPos.z]
+    groupRef.current.getWorldPosition(worldPos)
+    groupRef.current.getWorldQuaternion(worldQuat)
+    controller.update(delta, worldPos, worldQuat)
+  })
 
-    // Transform direction by world quaternion if localDirection is enabled
-    if (localDirection && direction) {
-      groupRef.current.getWorldQuaternion(_worldQuat)
-      emitDir = transformDirectionByQuat(direction, _worldQuat)
-    }
-
-    return { position: emitPos, direction: emitDir }
-  }, [localDirection, direction, position, transformDirectionByQuat])
-
-  // Emit function - accepts optional overrides that merge with component overrides
+  // Emit function with position resolution
   const emit = useCallback(
     (emitOverrides: Record<string, unknown> | null = null) => {
-      const particles = getParticleSystem()
-      if (!particles?.spawn) {
+      if (!groupRef.current) return false
+
+      // Re-resolve system in case it was registered late
+      if (!controller.getSystem()) {
+        const system = getParticleSystem()
+        if (system) controller.setSystem(system)
+      }
+
+      if (!controller.getSystem()) {
         if (name) {
           console.warn(
             `VFXEmitter: No particle system found for name "${name}"`
@@ -188,148 +145,54 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
         return false
       }
 
-      const { position: emitPos, direction: emitDir } = getEmitParams()
-      const [x, y, z] = emitPos
-
-      // Check if emit-time overrides include a direction
-      const emitTimeDirection = emitOverrides?.direction as
-        | [[number, number], [number, number], [number, number]]
-        | undefined
-
-      // If emit-time direction provided and localDirection enabled, transform it
-      let finalDir = emitDir
-      if (emitTimeDirection && localDirection && groupRef.current) {
-        groupRef.current.getWorldQuaternion(_worldQuat)
-        finalDir = transformDirectionByQuat(emitTimeDirection, _worldQuat)
-      } else if (emitTimeDirection) {
-        // Use emit-time direction as-is (no localDirection transform)
-        finalDir = emitTimeDirection
-      }
-
-      // Merge: component overrides -> emit-time overrides (without direction) -> final direction
-      const { direction: _, ...emitOverridesWithoutDir } = emitOverrides || {}
-      const mergedOverrides = { ...overrides, ...emitOverridesWithoutDir }
-      const finalOverrides = finalDir
-        ? { ...mergedOverrides, direction: finalDir }
-        : mergedOverrides
-
-      particles.spawn(x, y, z, emitCount, finalOverrides)
-
-      if (onEmit) {
-        onEmit({ position: emitPos, count: emitCount, direction: finalDir })
-      }
-
-      return true
+      groupRef.current.getWorldPosition(worldPos)
+      groupRef.current.getWorldQuaternion(worldQuat)
+      return controller.emitAtPosition(worldPos, worldQuat, emitOverrides)
     },
-    [
-      getParticleSystem,
-      getEmitParams,
-      name,
-      emitCount,
-      overrides,
-      onEmit,
-      localDirection,
-      transformDirectionByQuat,
-    ]
+    [controller, getParticleSystem, name]
   )
 
-  // Auto-emission logic
-  useFrame((_, delta) => {
-    if (!emitting.current) return
-
-    // If not looping and already emitted, stop
-    if (!loop && hasEmittedOnce.current) {
-      return
-    }
-
-    if (delay <= 0) {
-      // Emit every frame
-      const success = emit()
-      if (success) hasEmittedOnce.current = true
-    } else {
-      // Emit on interval
-      emitAccumulator.current += delta
-
-      if (emitAccumulator.current >= delay) {
-        emitAccumulator.current -= delay
-        const success = emit()
-        if (success) hasEmittedOnce.current = true
-      }
-    }
-  })
-
-  // Start/stop control methods
-  const start = useCallback(() => {
-    emitting.current = true
-    hasEmittedOnce.current = false
-    emitAccumulator.current = 0
-  }, [])
-
-  const stop = useCallback(() => {
-    emitting.current = false
-  }, [])
-
-  // Burst: emit once immediately, regardless of autoStart
+  // Burst
   const burst = useCallback(
     (count: number) => {
-      const particles = getParticleSystem()
-      if (!particles?.spawn) return false
+      if (!groupRef.current) return false
 
-      const { position: emitPos, direction: emitDir } = getEmitParams()
-      const [x, y, z] = emitPos
-
-      const finalOverrides = emitDir
-        ? { ...overrides, direction: emitDir }
-        : overrides
-
-      particles.spawn(x, y, z, count ?? emitCount, finalOverrides)
-
-      if (onEmit) {
-        onEmit({
-          position: emitPos,
-          count: count ?? emitCount,
-          direction: emitDir,
-        })
+      // Re-resolve system
+      if (!controller.getSystem()) {
+        const system = getParticleSystem()
+        if (system) controller.setSystem(system)
       }
 
-      return true
+      if (!controller.getSystem()) return false
+
+      groupRef.current.getWorldPosition(worldPos)
+      groupRef.current.getWorldQuaternion(worldQuat)
+      return controller.burst(count, worldPos, worldQuat)
     },
-    [getParticleSystem, getEmitParams, emitCount, overrides, onEmit]
+    [controller, getParticleSystem]
   )
 
-  // Update emitting state when autoStart changes
-  useEffect(() => {
-    emitting.current = autoStart
-    if (autoStart) {
-      hasEmittedOnce.current = false
-      emitAccumulator.current = 0
-    }
-  }, [autoStart])
+  // Start/stop
+  const start = useCallback(() => controller.start(), [controller])
+  const stop = useCallback(() => controller.stop(), [controller])
 
   // Expose control methods via ref
   useImperativeHandle(
     ref,
     () => ({
-      /** Emit particles at current position */
       emit,
-      /** Burst emit - emit immediately regardless of autoStart */
       burst,
-      /** Start auto-emission */
       start,
-      /** Stop auto-emission */
       stop,
-      /** Check if currently emitting */
       get isEmitting() {
-        return emitting.current
+        return controller.isEmitting
       },
-      /** Get the linked particle system */
       getParticleSystem,
-      /** Get the group ref for direct access */
       get group() {
         return groupRef.current
       },
     }),
-    [emit, burst, start, stop, getParticleSystem]
+    [emit, burst, start, stop, controller, getParticleSystem]
   )
 
   // Render a group that inherits parent transforms
@@ -355,6 +218,9 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
  * burst([0, 0, 0], 100, { colorStart: ["#ff0000"] });
  */
 export function useVFXEmitter(name: string) {
+  const { gl } = useThree()
+  const isWebGPU = useMemo(() => isWebGPUBackend(gl), [gl])
+
   const getParticles = useVFXStore((s) => s.getParticles)
   const storeEmit = useVFXStore((s) => s.emit)
   const storeStart = useVFXStore((s) => s.start)
@@ -363,33 +229,48 @@ export function useVFXEmitter(name: string) {
 
   const emit = useCallback(
     (position = [0, 0, 0], count = 20, overrides = null) => {
+      if (!isWebGPU) return false
       const [x, y, z] = position
       return storeEmit(name, { x, y, z, count, overrides })
     },
-    [name, storeEmit]
+    [isWebGPU, name, storeEmit]
   )
 
   const burst = useCallback(
     (position = [0, 0, 0], count = 50, overrides = null) => {
+      if (!isWebGPU) return false
       const [x, y, z] = position
       return storeEmit(name, { x, y, z, count, overrides })
     },
-    [name, storeEmit]
+    [isWebGPU, name, storeEmit]
   )
 
-  const start = useCallback(() => storeStart(name), [name, storeStart])
-  const stop = useCallback(() => storeStop(name), [name, storeStop])
-  const clear = useCallback(() => storeClear(name), [name, storeClear])
+  const start = useCallback(() => {
+    if (!isWebGPU) return false
+    return storeStart(name)
+  }, [isWebGPU, name, storeStart])
+
+  const stop = useCallback(() => {
+    if (!isWebGPU) return false
+    return storeStop(name)
+  }, [isWebGPU, name, storeStop])
+
+  const clear = useCallback(() => {
+    if (!isWebGPU) return false
+    return storeClear(name)
+  }, [isWebGPU, name, storeClear])
 
   const isEmitting = useCallback(() => {
+    if (!isWebGPU) return false
     const particles = getParticles(name)
     return particles?.isEmitting ?? false
-  }, [name, getParticles])
+  }, [isWebGPU, name, getParticles])
 
   const getUniforms = useCallback(() => {
+    if (!isWebGPU) return null
     const particles = getParticles(name)
     return particles?.uniforms ?? null
-  }, [name, getParticles])
+  }, [isWebGPU, name, getParticles])
 
   return {
     emit,
@@ -399,7 +280,7 @@ export function useVFXEmitter(name: string) {
     clear,
     isEmitting,
     getUniforms,
-    getParticles: () => getParticles(name),
+    getParticles: () => (isWebGPU ? getParticles(name) : null),
   }
 }
 

@@ -274,6 +274,14 @@ export const buildCurveTextureBin = (
   return data.buffer
 }
 
+export type CurveTextureResolved = {
+  texture: THREE.DataTexture
+  sizeEnabled: boolean
+  opacityEnabled: boolean
+  velocityEnabled: boolean
+  rotationSpeedEnabled: boolean
+}
+
 /**
  * Load a pre-baked curve texture from a .bin file.
  * Supports both old format (raw 256*4 floats, all channels active)
@@ -327,4 +335,88 @@ export const loadCurveTextureFromPath = async (
   tex.needsUpdate = true
 
   return { texture: tex, activeChannels }
+}
+
+/**
+ * Resolve a curve texture from either a .bin path or inline curve data.
+ *
+ * Priority:
+ * 1. curveTexturePath → load from .bin file (with fallback to baking on error)
+ * 2. Inline curve data → bake synchronously
+ * 3. No curves → default 1→0 texture
+ */
+export const resolveCurveTexture = async (options: {
+  fadeSizeCurve?: CurveData | null
+  fadeOpacityCurve?: CurveData | null
+  velocityCurve?: CurveData | null
+  rotationSpeedCurve?: CurveData | null
+  curveTexturePath?: string | null
+}): Promise<CurveTextureResolved> => {
+  const {
+    fadeSizeCurve = null,
+    fadeOpacityCurve = null,
+    velocityCurve = null,
+    rotationSpeedCurve = null,
+    curveTexturePath = null,
+  } = options
+
+  const hasAnyCurve =
+    fadeSizeCurve || fadeOpacityCurve || velocityCurve || rotationSpeedCurve
+
+  if (curveTexturePath) {
+    try {
+      const result = await loadCurveTextureFromPath(curveTexturePath)
+      return {
+        texture: result.texture,
+        sizeEnabled: !!(result.activeChannels & CurveChannel.SIZE),
+        opacityEnabled: !!(result.activeChannels & CurveChannel.OPACITY),
+        velocityEnabled: !!(result.activeChannels & CurveChannel.VELOCITY),
+        rotationSpeedEnabled: !!(
+          result.activeChannels & CurveChannel.ROTATION_SPEED
+        ),
+      }
+    } catch (err) {
+      console.warn(
+        `Failed to load curve texture: ${curveTexturePath}, falling back to baking`,
+        err
+      )
+      if (hasAnyCurve) {
+        return {
+          texture: createCombinedCurveTexture(
+            fadeSizeCurve as CurveData,
+            fadeOpacityCurve as CurveData,
+            velocityCurve as CurveData,
+            rotationSpeedCurve as CurveData
+          ),
+          sizeEnabled: !!fadeSizeCurve,
+          opacityEnabled: !!fadeOpacityCurve,
+          velocityEnabled: !!velocityCurve,
+          rotationSpeedEnabled: !!rotationSpeedCurve,
+        }
+      }
+    }
+  }
+
+  if (hasAnyCurve) {
+    return {
+      texture: createCombinedCurveTexture(
+        fadeSizeCurve as CurveData,
+        fadeOpacityCurve as CurveData,
+        velocityCurve as CurveData,
+        rotationSpeedCurve as CurveData
+      ),
+      sizeEnabled: !!fadeSizeCurve,
+      opacityEnabled: !!fadeOpacityCurve,
+      velocityEnabled: !!velocityCurve,
+      rotationSpeedEnabled: !!rotationSpeedCurve,
+    }
+  }
+
+  return {
+    texture: createDefaultCurveTexture(),
+    sizeEnabled: false,
+    opacityEnabled: false,
+    velocityEnabled: false,
+    rotationSpeedEnabled: false,
+  }
 }

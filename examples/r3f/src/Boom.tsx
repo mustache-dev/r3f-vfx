@@ -1,11 +1,16 @@
 import { useFrame, useLoader } from '@react-three/fiber'
-import {
-  Blending,
-  useVFXEmitter,
-  VFXParticles,
-} from '../../../packages/r3f-vfx/src'
-import { SRGBColorSpace, TextureLoader, Vector3 } from 'three'
-import { color, mix, smoothstep, texture, uv, vec3, vec4 } from 'three/tsl'
+import { useVFXEmitter, VFXParticles } from 'r3f-vfx'
+import { SRGBColorSpace, TextureLoader, Vector3 } from 'three/webgpu'
+import { color, mix, texture, uv, vec3, vec4 } from 'three/tsl'
+
+function FallbackSprite() {
+  const tex = useLoader(TextureLoader, './fallback.png')
+  return (
+    <sprite scale={[3, 3, 1]}>
+      <spriteMaterial map={tex} />
+    </sprite>
+  )
+}
 export const Boom = () => {
   const text = useLoader(TextureLoader, './smoke-ww.png')
   text.colorSpace = SRGBColorSpace
@@ -89,7 +94,7 @@ export const Boom = () => {
       emit([0, 0, 0], 100)
       for (let i = 0; i < 5; i++) {
         const angle = (Math.PI * 2 * i) / 5
-        vectors[i].set(0, -.5, 0)
+        vectors[i].set(0, -0.5, 0)
         velocities[i].set(
           Math.cos(angle) * outSpeed,
           upSpeed,
@@ -101,6 +106,7 @@ export const Boom = () => {
   })
   return (
     <VFXParticles
+      fallback={<FallbackSprite />}
       autoStart={false}
       name="boom"
       curveTexturePath={'./boom-2.bin'}
