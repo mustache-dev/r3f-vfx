@@ -1,3 +1,7 @@
+// Check if the renderer is using the WebGPU backend
+export const isWebGPUBackend = (renderer: unknown): boolean =>
+  (renderer as any)?.backend?.isWebGPUBackend === true
+
 // Convert hex color string to RGB array [0-1]
 export const hexToRgb = (hex: string): [number, number, number] => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)

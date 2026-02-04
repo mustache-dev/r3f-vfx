@@ -16,6 +16,7 @@ import {
   EmitterShape,
   Lighting,
   VFXParticleSystem,
+  isWebGPUBackend,
   isNonDefaultRotation,
   normalizeProps,
   updateUniforms,
@@ -45,10 +46,12 @@ export type VFXParticlesProps = VFXParticleSystemOptions & {
   name?: string
   /** Show debug control panel */
   debug?: boolean
+  /** Optional fallback content to render when WebGPU is not available */
+  fallback?: React.ReactNode
 }
 
-export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
-  function VFXParticles(
+const VFXParticlesImpl = forwardRef<unknown, VFXParticlesProps>(
+  function VFXParticlesImpl(
     {
       name,
       maxParticles = 10000,
@@ -752,5 +755,26 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
 
     // @ts-expect-error
     return <primitive ref={spriteRef} object={system.renderObject} />
+  }
+)
+
+let warnedWebGL = false
+
+export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
+  function VFXParticles({ fallback, ...props }, ref) {
+    const { gl } = useThree()
+    const isWebGPU = useMemo(() => isWebGPUBackend(gl), [gl])
+
+    if (!isWebGPU) {
+      if (!warnedWebGL) {
+        warnedWebGL = true
+        console.warn(
+          'r3f-vfx: WebGPU backend not detected. Particle system disabled.'
+        )
+      }
+      return <>{fallback ?? null}</>
+    }
+
+    return <VFXParticlesImpl ref={ref} {...props} />
   }
 )

@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu'
 import {
   VFXParticleSystem,
+  isWebGPUBackend,
   needsRecreation,
   updateUniformsPartial,
 } from 'core-vfx'
@@ -8,7 +9,11 @@ import type { VFXParticleSystemOptions } from 'core-vfx'
 
 export type VFXParticlesOptions = VFXParticleSystemOptions & {
   debug?: boolean
+  /** Optional fallback Object3D to display when WebGPU is not available */
+  fallback?: THREE.Object3D
 }
+
+let _warnedWebGL = false
 
 export class VFXParticles {
   readonly group: THREE.Group
@@ -20,13 +25,28 @@ export class VFXParticles {
   private _emitAccumulator = 0
   private _debug: boolean
   private _initialized = false
+  private _disabled = false
 
   constructor(renderer: THREE.WebGPURenderer, options?: VFXParticlesOptions) {
     this._renderer = renderer
     this._debug = options?.debug ?? false
     this._config = { ...options }
     delete this._config.debug
+    delete this._config.fallback
     this.group = new THREE.Group()
+
+    if (!isWebGPUBackend(renderer)) {
+      this._disabled = true
+      if (!_warnedWebGL) {
+        _warnedWebGL = true
+        console.warn(
+          'r3f-vfx: WebGPU backend not detected. Particle system disabled.'
+        )
+      }
+      if (options?.fallback) {
+        this.group.add(options.fallback)
+      }
+    }
   }
 
   get object3D(): THREE.Group {
@@ -50,6 +70,7 @@ export class VFXParticles {
   }
 
   async init(): Promise<void> {
+    if (this._disabled) return
     if (this._initialized) return
 
     if (this._debug) {
@@ -71,6 +92,7 @@ export class VFXParticles {
   }
 
   update(delta: number): void {
+    if (this._disabled) return
     if (!this._system || !this._system.initialized) return
 
     // Auto-emission
@@ -114,6 +136,7 @@ export class VFXParticles {
     count?: number,
     overrides?: Record<string, unknown> | null
   ): void {
+    if (this._disabled) return
     if (!this._system) return
     this._system.spawn(
       x,
@@ -125,22 +148,26 @@ export class VFXParticles {
   }
 
   start(): void {
+    if (this._disabled) return
     this._emitting = true
     this._emitAccumulator = 0
     if (this._system) this._system.start()
   }
 
   stop(): void {
+    if (this._disabled) return
     this._emitting = false
     if (this._system) this._system.stop()
   }
 
   clear(): void {
+    if (this._disabled) return
     if (this._system) this._system.clear()
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setProps(newValues: Record<string, any>): void {
+    if (this._disabled) return
     this._config = { ...this._config, ...newValues }
 
     // Check if structural keys or feature flags changed (requires GPU pipeline rebuild)

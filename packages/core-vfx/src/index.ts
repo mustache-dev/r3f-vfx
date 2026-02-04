@@ -32,6 +32,7 @@ export type {
 
 // Utilities
 export {
+  isWebGPUBackend,
   hexToRgb,
   toRange,
   easingToType,

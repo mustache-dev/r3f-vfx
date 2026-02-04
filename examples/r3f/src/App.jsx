@@ -1,15 +1,18 @@
 import * as THREE from 'three/webgpu'
-import { Canvas, extend } from '@react-three/fiber'
+import { Canvas, useLoader } from '@react-three/fiber'
 import SceneLight from './SceneLight'
 import { Suspense } from 'react'
-import { KeyboardControls, Loader, OrbitControls } from '@react-three/drei'
+import { KeyboardControls, Loader } from '@react-three/drei'
 import { WebGPUPostProcessing } from './WebGPUPostprocessing'
-import { WobblySphere } from './WobblySphere'
 import { Floor } from './Floor'
 import Player from './Player'
 import { Boom } from './Boom'
 import { VFXParticles } from 'r3f-vfx'
-// import { Particles } from './Particles'
+
+function FallbackSprite() {
+  const texture = useLoader(THREE.TextureLoader, './fallback.png')
+  return <sprite scale={[3, 3, 1]}><spriteMaterial map={texture} /></sprite>
+}
 
 const keyboardMap = [
   { name: 'forward', keys: ['ArrowUp', 'KeyW'] },
@@ -23,7 +26,7 @@ const keyboardMap = [
 export default function App() {
   return (
     <>
-      <Canvas shadows renderer>
+      <Canvas shadows renderer={{ forceWebGL: false }}>
         <Suspense fallback={null}>
           <SceneLight />
           <WebGPUPostProcessing />
@@ -33,10 +36,8 @@ export default function App() {
           </KeyboardControls>
           <Boom />
           <group position={[5, 0, 0]}>
-            <VFXParticles debug />
+            <VFXParticles debug fallback={<FallbackSprite />} />
           </group>
-          {/* <Particles /> */}
-          {/* <WobblySphere/> */}
         </Suspense>
       </Canvas>
 

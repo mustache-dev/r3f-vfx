@@ -40,6 +40,7 @@ export type {
 export {
   VFXParticleSystem,
   EmitterController,
+  isWebGPUBackend,
   isNonDefaultRotation,
   normalizeProps,
   resolveCurveTexture,

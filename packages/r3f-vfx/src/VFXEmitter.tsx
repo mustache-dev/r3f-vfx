@@ -2,15 +2,20 @@ import {
   useRef,
   useEffect,
   useCallback,
+  useMemo,
   forwardRef,
   useImperativeHandle,
   ReactNode,
   RefObject,
 } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Vector3, Quaternion, Group } from 'three/webgpu'
 import { useVFXStore } from './react-store'
-import { EmitterController, type EmitterControllerOptions } from 'core-vfx'
+import {
+  EmitterController,
+  isWebGPUBackend,
+  type EmitterControllerOptions,
+} from 'core-vfx'
 
 export interface VFXEmitterProps extends EmitterControllerOptions {
   /** Name of the registered VFXParticles system */
@@ -45,6 +50,8 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
   }: VFXEmitterProps,
   ref
 ) {
+  const { gl } = useThree()
+  const isWebGPU = useMemo(() => isWebGPUBackend(gl), [gl])
   const groupRef = useRef<Group>(null)
 
   // Create controller
@@ -74,9 +81,10 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
 
   // Link controller to particle system
   useEffect(() => {
+    if (!isWebGPU) return
     const system = getParticleSystem()
     controller.setSystem(system)
-  }, [getParticleSystem, controller])
+  }, [isWebGPU, getParticleSystem, controller])
 
   // Update controller options when props change
   useEffect(() => {
@@ -104,6 +112,7 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
 
   // Re-resolve system on each frame in case it registered late
   useFrame((_, delta) => {
+    if (!isWebGPU) return
     if (!controller.getSystem()) {
       const system = getParticleSystem()
       if (system) controller.setSystem(system)
@@ -209,6 +218,9 @@ export const VFXEmitter = forwardRef(function VFXEmitter(
  * burst([0, 0, 0], 100, { colorStart: ["#ff0000"] });
  */
 export function useVFXEmitter(name: string) {
+  const { gl } = useThree()
+  const isWebGPU = useMemo(() => isWebGPUBackend(gl), [gl])
+
   const getParticles = useVFXStore((s) => s.getParticles)
   const storeEmit = useVFXStore((s) => s.emit)
   const storeStart = useVFXStore((s) => s.start)
@@ -217,33 +229,48 @@ export function useVFXEmitter(name: string) {
 
   const emit = useCallback(
     (position = [0, 0, 0], count = 20, overrides = null) => {
+      if (!isWebGPU) return false
       const [x, y, z] = position
       return storeEmit(name, { x, y, z, count, overrides })
     },
-    [name, storeEmit]
+    [isWebGPU, name, storeEmit]
   )
 
   const burst = useCallback(
     (position = [0, 0, 0], count = 50, overrides = null) => {
+      if (!isWebGPU) return false
       const [x, y, z] = position
       return storeEmit(name, { x, y, z, count, overrides })
     },
-    [name, storeEmit]
+    [isWebGPU, name, storeEmit]
   )
 
-  const start = useCallback(() => storeStart(name), [name, storeStart])
-  const stop = useCallback(() => storeStop(name), [name, storeStop])
-  const clear = useCallback(() => storeClear(name), [name, storeClear])
+  const start = useCallback(() => {
+    if (!isWebGPU) return false
+    return storeStart(name)
+  }, [isWebGPU, name, storeStart])
+
+  const stop = useCallback(() => {
+    if (!isWebGPU) return false
+    return storeStop(name)
+  }, [isWebGPU, name, storeStop])
+
+  const clear = useCallback(() => {
+    if (!isWebGPU) return false
+    return storeClear(name)
+  }, [isWebGPU, name, storeClear])
 
   const isEmitting = useCallback(() => {
+    if (!isWebGPU) return false
     const particles = getParticles(name)
     return particles?.isEmitting ?? false
-  }, [name, getParticles])
+  }, [isWebGPU, name, getParticles])
 
   const getUniforms = useCallback(() => {
+    if (!isWebGPU) return null
     const particles = getParticles(name)
     return particles?.uniforms ?? null
-  }, [name, getParticles])
+  }, [isWebGPU, name, getParticles])
 
   return {
     emit,
@@ -253,7 +280,7 @@ export function useVFXEmitter(name: string) {
     clear,
     isEmitting,
     getUniforms,
-    getParticles: () => getParticles(name),
+    getParticles: () => (isWebGPU ? getParticles(name) : null),
   }
 }
 

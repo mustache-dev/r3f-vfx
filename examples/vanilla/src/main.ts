@@ -48,7 +48,7 @@ async function main() {
   camera.position.set(0, 3, 10)
   camera.rotation.set(-Math.PI / 6, 0, 0)
 
-  const renderer = new THREE.WebGPURenderer({ antialias: true })
+  const renderer = new THREE.WebGPURenderer({ antialias: true, forceWebGL: false })
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -265,7 +265,19 @@ async function main() {
     )
   }
 
+  const fallbackTexture = await new THREE.TextureLoader().loadAsync(
+    './fallback.png'
+  )
+  const createFallbackSprite = () => {
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: fallbackTexture })
+    )
+    sprite.scale.set(3, 3, 1)
+    return sprite
+  }
+
   const particles = new VFXParticles(renderer, {
+    fallback: createFallbackSprite(),
     autoStart: false,
     curveTexturePath: './boom-2.bin',
     emitCount: 100,
@@ -317,7 +329,10 @@ async function main() {
   // =========================================================================
   // Debug particles (default, next to boom)
   // =========================================================================
-  const debugParticles = new VFXParticles(renderer, { debug: true })
+  const debugParticles = new VFXParticles(renderer, {
+    fallback: createFallbackSprite(),
+    debug: true,
+  })
   debugParticles.object3D.position.set(5, 0, 0)
   scene.add(debugParticles.object3D)
   await debugParticles.init()
