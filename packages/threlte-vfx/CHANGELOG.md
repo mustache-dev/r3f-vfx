@@ -1,5 +1,11 @@
 # threlte-vfx
 
+## 0.2.1
+
+### Patch Changes
+
+- f238b38: Fix export
+
 ## 0.2.0
 
 ### Minor Changes
