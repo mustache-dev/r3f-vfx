@@ -11,7 +11,10 @@
       "Bash(bun run format:*)",
       "Bash(bun run:*)",
       "Bash(tree:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.tresjs.org)",
+      "WebFetch(domain:cientos.tresjs.org)"
     ]
   }
 }

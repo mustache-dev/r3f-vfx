@@ -4,7 +4,7 @@ import { Appearance, Blending, EmitterShape, Lighting } from 'core-vfx'
 import { buildCurveTextureBin } from 'core-vfx'
 import { create } from 'zustand'
 import { GeometryType, geometryDefaults } from './geometry'
-import { generateVFXParticlesJSX, generateVanillaCode } from './code-generation'
+import { generateVFXParticlesJSX, generateVueTemplate, generateVanillaCode } from './code-generation'
 import { wrapped, styles } from './styles'
 
 export {
@@ -2834,7 +2834,9 @@ const DebugPanelContent = ({ initialValues, onUpdate, mode = 'r3f' }) => {
     const code =
       mode === 'vanilla'
         ? generateVanillaCode(valuesRef.current)
-        : generateVFXParticlesJSX(valuesRef.current)
+        : mode === 'tres'
+          ? generateVueTemplate(valuesRef.current)
+          : generateVFXParticlesJSX(valuesRef.current)
     try {
       await navigator.clipboard.writeText(code)
       setCopySuccess(true)

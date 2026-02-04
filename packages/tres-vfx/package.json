@@ -24,9 +24,17 @@
     "prepublishOnly": "bun run typecheck && bun run build && bun run copy-readme"
   },
   "dependencies": {
-    "core-vfx": "0.1.0"
+    "core-vfx": "0.1.0",
+    "debug-vfx": "0.1.0"
+  },
+  "peerDependencies": {
+    "@tresjs/core": ">=5.0.0",
+    "vue": ">=3.5.0",
+    "three": ">=0.182.0"
   },
   "devDependencies": {
+    "@tresjs/core": "5.3.0",
+    "vue": "3.5.16",
     "tsup": "8.5.1",
     "typescript": "5.9.3"
   }

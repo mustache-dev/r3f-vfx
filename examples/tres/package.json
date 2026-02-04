@@ -1,0 +1,22 @@
+{
+  "name": "tres-example",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview --host"
+  },
+  "dependencies": {
+    "@tresjs/cientos": "^5.0.0",
+    "@tresjs/core": "^5.3.0",
+    "tres-vfx": "^0.1.0",
+    "vue": "^3.5.0",
+    "three": "0.182.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@types/three": "0.182.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.1"
+  }
+}

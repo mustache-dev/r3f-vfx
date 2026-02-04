@@ -399,6 +399,103 @@ const formatObjectProp = (key: string, value: unknown): string | null => {
   return null
 }
 
+// Convert camelCase to kebab-case for Vue template attributes
+const camelToKebab = (str: string): string =>
+  str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+
+// Helper to format value for Vue template output
+const formatVueValue = (key: string, value: unknown): string | null => {
+  if (value === undefined || value === null) return null
+  const kebab = camelToKebab(key)
+
+  // Booleans: true → bare attribute, false → :attr="false"
+  if (typeof value === 'boolean') {
+    return value ? kebab : `:${kebab}="false"`
+  }
+
+  // Numbers
+  if (typeof value === 'number') {
+    return `:${kebab}="${value}"`
+  }
+
+  // Strings (colors, enum names, etc.)
+  if (typeof value === 'string') {
+    return `${kebab}="${value}"`
+  }
+
+  // Arrays
+  if (Array.isArray(value)) {
+    // Colors → single quotes inside double-quoted attribute
+    if (
+      value.length > 0 &&
+      typeof value[0] === 'string' &&
+      value[0].startsWith('#')
+    ) {
+      return `:${kebab}="[${value.map((v: string) => `'${v}'`).join(', ')}]"`
+    }
+    // 2D arrays (direction, rotation, etc.)
+    if (value.length > 0 && Array.isArray(value[0])) {
+      return `:${kebab}="[${value.map((v: number[]) => `[${v.join(', ')}]`).join(', ')}]"`
+    }
+    // Simple number arrays
+    return `:${kebab}="[${value.join(', ')}]"`
+  }
+
+  // Objects
+  if (typeof value === 'object') {
+    const fmtVal = (v: unknown): string => {
+      if (v === undefined || v === null) return 'null'
+      if (typeof v === 'string') return `'${v}'`
+      if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+      if (Array.isArray(v)) {
+        if (v.length > 0 && typeof v[0] === 'object' && !Array.isArray(v[0])) {
+          return `[${v.map((item: unknown) => fmtVal(item)).join(', ')}]`
+        }
+        return `[${v.map((item: unknown) => fmtVal(item)).join(', ')}]`
+      }
+      if (typeof v === 'object') return fmtObj(v as Record<string, unknown>)
+      return String(v)
+    }
+    const fmtObj = (obj: Record<string, unknown>): string => {
+      const entries = Object.entries(obj).filter(
+        ([, v]) => v !== undefined && v !== null
+      )
+      if (entries.length === 0) return '{}'
+      return `{ ${entries.map(([k, v]) => `${k}: ${fmtVal(v)}`).join(', ')} }`
+    }
+    return `:${kebab}="${fmtObj(value as Record<string, unknown>)}"`
+  }
+
+  return null
+}
+
+// Generate Vue template string from values
+export const generateVueTemplate = (values: Values): string => {
+  const props: string[] = []
+
+  // Handle geometry specially
+  if (values.geometryType && values.geometryType !== GeometryType.NONE) {
+    const geoCode = geometryTypeToJSX(values.geometryType, values.geometryArgs)
+    if (geoCode) {
+      props.push(`:geometry="${geoCode}"`)
+    }
+  }
+
+  for (const key of propOrder) {
+    const value = values[key]
+    if (shouldSkipDefault(key, value, values)) continue
+
+    const formatted = formatVueValue(key, value)
+    if (formatted) props.push(formatted)
+  }
+
+  if (props.length === 0) {
+    return '<VFXParticles />'
+  }
+
+  return `<VFXParticles\n  ${props.join('\n  ')}\n/>`
+}
+
 // Generate vanilla JS constructor code from values
 export const generateVanillaCode = (values: Values): string => {
   const props: string[] = []
