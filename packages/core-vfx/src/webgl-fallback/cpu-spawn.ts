@@ -20,15 +20,14 @@ export const cpuSpawn = (
   const endIdx = u.spawnIndexEnd.value as number
   const seed = u.spawnSeed.value as number
 
-  for (let i = 0; i < maxParticles; i++) {
-    // Check if particle index is in spawn range (handles wraparound)
-    const inRange =
-      startIdx < endIdx
-        ? i >= startIdx && i < endIdx
-        : i >= startIdx || i < endIdx
+  // Only iterate the spawn range instead of all maxParticles
+  const count =
+    startIdx < endIdx
+      ? endIdx - startIdx
+      : maxParticles - startIdx + endIdx
 
-    if (!inRange) continue
-
+  for (let j = 0; j < count; j++) {
+    const i = (startIdx + j) % maxParticles
     const i3 = i * 3
     const particleSeed = i + seed
 

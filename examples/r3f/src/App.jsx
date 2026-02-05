@@ -30,7 +30,7 @@ const keyboardMap = [
 export default function App() {
   return (
     <>
-      <Canvas shadows renderer={{ forceWebGL: true }}>
+      <Canvas shadows renderer={{ forceWebGL: false }}>
         <Suspense fallback={null}>
           <SceneLight />
           <WebGPUPostProcessing />

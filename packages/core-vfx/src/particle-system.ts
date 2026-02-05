@@ -35,6 +35,7 @@ import {
   cpuUpdate,
   extractCPUArrays,
   markAllDirty,
+  markUpdateDirty,
   type CPUStorageArrays,
 } from './webgl-fallback'
 
@@ -314,7 +315,7 @@ export class VFXParticleSystem {
           rotation: this.features.rotation,
         }
       )
-      markAllDirty(this.storage)
+      markUpdateDirty(this.storage, this.features.rotation)
     } else {
       await (
         this.renderer as unknown as {

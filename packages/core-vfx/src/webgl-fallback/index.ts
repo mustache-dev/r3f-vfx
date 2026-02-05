@@ -5,6 +5,7 @@ export {
   type CPUStorageArrays,
   extractCPUArrays,
   markAllDirty,
+  markUpdateDirty,
 } from './buffer-utils'
 export { cpuInit } from './cpu-init'
 export { cpuSpawn } from './cpu-spawn'

@@ -13,7 +13,7 @@ const createWebGPURenderer = (ctx: { canvas: any }) => {
     canvas,
     antialias: true,
     alpha: false,
-    forceWebGL: true,
+    forceWebGL: false,
   })
   return renderer
 }

@@ -50,7 +50,7 @@ async function main() {
 
   const renderer = new THREE.WebGPURenderer({
     antialias: true,
-    forceWebGL: true,
+    forceWebGL: false,
   })
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setPixelRatio(window.devicePixelRatio)
