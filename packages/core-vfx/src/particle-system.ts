@@ -67,8 +67,8 @@ export class VFXParticleSystem {
   private emitAccumulator = 0
   private turbulenceSpeed: number
   position: [number, number, number]
-  private _isWebGL: boolean
-  private _cpuArrays: CPUStorageArrays | null = null
+  private isWebGL: boolean
+  private cpuArrays: CPUStorageArrays | null = null
 
   constructor(
     renderer: THREE.WebGPURenderer,
@@ -124,11 +124,11 @@ export class VFXParticleSystem {
     u.rotationSpeedCurveEnabled.value = options.rotationSpeedCurve ? 1 : 0
 
     // Detect backend
-    this._isWebGL = !isWebGPUBackend(renderer)
+    this.isWebGL = !isWebGPUBackend(renderer)
 
-    if (this._isWebGL) {
+    if (this.isWebGL) {
       // CPU fallback: extract typed arrays, skip compute shader creation
-      this._cpuArrays = extractCPUArrays(this.storage)
+      this.cpuArrays = extractCPUArrays(this.storage)
       this.computeInit = null
       this.computeSpawn = null
       this.computeUpdate = null
@@ -195,8 +195,8 @@ export class VFXParticleSystem {
   async init(): Promise<void> {
     if (this.initialized) return
 
-    if (this._isWebGL) {
-      cpuInit(this._cpuArrays!, this.normalizedProps.maxParticles)
+    if (this.isWebGL) {
+      cpuInit(this.cpuArrays!, this.normalizedProps.maxParticles)
       markAllDirty(this.storage)
     } else {
       await (
@@ -277,9 +277,9 @@ export class VFXParticleSystem {
 
     this.nextIndex = endIdx
 
-    if (this._isWebGL) {
+    if (this.isWebGL) {
       cpuSpawn(
-        this._cpuArrays!,
+        this.cpuArrays!,
         this.uniforms,
         this.normalizedProps.maxParticles
       )
@@ -302,9 +302,9 @@ export class VFXParticleSystem {
     u.deltaTime.value = delta
     u.turbulenceTime.value += delta * this.turbulenceSpeed
 
-    if (this._isWebGL) {
+    if (this.isWebGL) {
       cpuUpdate(
-        this._cpuArrays!,
+        this.cpuArrays!,
         this.uniforms,
         this.curveTexture,
         this.normalizedProps.maxParticles,
@@ -354,8 +354,8 @@ export class VFXParticleSystem {
   }
 
   clear(): void {
-    if (this._isWebGL) {
-      cpuInit(this._cpuArrays!, this.normalizedProps.maxParticles)
+    if (this.isWebGL) {
+      cpuInit(this.cpuArrays!, this.normalizedProps.maxParticles)
       markAllDirty(this.storage)
     } else {
       ;(
