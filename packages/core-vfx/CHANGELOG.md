@@ -1,5 +1,11 @@
 # core-vfx
 
+## 0.2.0
+
+### Minor Changes
+
+- f0eb503: Add CPU fallback for WebGL
+
 ## 0.1.0
 
 ### Minor Changes

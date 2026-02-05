@@ -1,5 +1,17 @@
 # r3f-vfx
 
+## 0.3.0
+
+### Minor Changes
+
+- f0eb503: Add CPU fallback for WebGL
+
+### Patch Changes
+
+- Updated dependencies [f0eb503]
+  - core-vfx@0.2.0
+  - debug-vfx@0.1.2
+
 ## 0.2.1
 
 ### Patch Changes

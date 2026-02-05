@@ -1,5 +1,13 @@
 # debug-vfx
 
+## 0.1.2
+
+### Patch Changes
+
+- f0eb503: Add CPU fallback for WebGL
+- Updated dependencies [f0eb503]
+  - core-vfx@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes
