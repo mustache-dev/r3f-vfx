@@ -1,5 +1,17 @@
 # tres-vfx
 
+## 0.4.0
+
+### Minor Changes
+
+- 2cf25b3: Bump
+
+### Patch Changes
+
+- Updated dependencies [2cf25b3]
+  - core-vfx@0.3.0
+  - debug-vfx@0.3.0
+
 ## 0.3.0
 
 ### Minor Changes
