@@ -10,7 +10,7 @@
   "dependencies": {
     "@threlte/core": "^8.3.1",
     "@threlte/extras": "^9.7.1",
-    "threlte-vfx": "^0.2.1",
+    "threlte-vfx": "^0.3.0",
     "svelte": "^5.28.2",
     "three": "0.182.0"
   },

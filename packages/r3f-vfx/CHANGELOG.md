@@ -1,5 +1,17 @@
 # r3f-vfx
 
+## 0.3.0
+
+### Minor Changes
+
+- 4a7270a: Trails
+
+### Patch Changes
+
+- Updated dependencies [4a7270a]
+  - core-vfx@0.2.0
+  - debug-vfx@0.2.0
+
 ## 0.2.1
 
 ### Patch Changes

@@ -9,7 +9,7 @@
   "dependencies": {
     "@tresjs/cientos": "^5.0.0",
     "@tresjs/core": "^5.3.0",
-    "tres-vfx": "^0.2.0",
+    "tres-vfx": "^0.3.0",
     "vue": "^3.5.0",
     "three": "0.182.0"
   },

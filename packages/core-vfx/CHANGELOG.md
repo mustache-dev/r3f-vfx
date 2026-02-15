@@ -1,5 +1,11 @@
 # core-vfx
 
+## 0.2.0
+
+### Minor Changes
+
+- 4a7270a: Trails
+
 ## 0.1.0
 
 ### Minor Changes
