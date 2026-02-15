@@ -22,9 +22,7 @@ export const cpuSpawn = (
 
   // Only iterate the spawn range instead of all maxParticles
   const count =
-    startIdx < endIdx
-      ? endIdx - startIdx
-      : maxParticles - startIdx + endIdx
+    startIdx < endIdx ? endIdx - startIdx : maxParticles - startIdx + endIdx
 
   for (let j = 0; j < count; j++) {
     const i = (startIdx + j) % maxParticles

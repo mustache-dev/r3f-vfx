@@ -783,7 +783,9 @@ export const VFXParticles = forwardRef<unknown, VFXParticlesProps>(
 
     return (
       <>
+        {/* @ts-ignore */}
         <primitive ref={spriteRef} object={system.renderObject} />
+        {/* @ts-ignore */}
         {trailObject && <primitive object={trailObject} />}
       </>
     )

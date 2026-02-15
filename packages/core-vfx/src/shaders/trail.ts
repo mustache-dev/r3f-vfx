@@ -72,7 +72,11 @@ export const createTrailHistoryPositionNode = (
     // Read from ring buffer: head is the most recent write position
     // We go backwards from head to read chronological history
     const baseIdx = instanceIndex.mul(segments)
-    const readOffset = uniforms.trailHead.sub(segIdx).add(float(segments)).mod(float(segments)).floor()
+    const readOffset = uniforms.trailHead
+      .sub(segIdx)
+      .add(float(segments))
+      .mod(float(segments))
+      .floor()
     const readIdx = baseIdx.add(readOffset)
 
     const trailPos = storage.trailHistory!.element(readIdx)
